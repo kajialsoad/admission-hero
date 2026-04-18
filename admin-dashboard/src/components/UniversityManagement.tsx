@@ -394,12 +394,13 @@ export default function UniversityManagement() {
           if (!open) resetForm()
         }}
       >
-        <DialogContent className="max-w-3xl overflow-y-auto scroll-y">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Add New University</DialogTitle>
             <DialogDescription>Create a new university profile</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
             <div>
               <Label htmlFor="university-logo">University Logo</Label>
               <p className="text-sm text-gray-500 mb-2">Upload a university logo (recommended: 200x200px)</p>
@@ -438,7 +439,7 @@ export default function UniversityManagement() {
             <div>
               <Label>Units</Label>
               <p className="text-sm text-gray-500 mb-3">Select the units available in this university</p>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 {AVAILABLE_UNITS.map((unit) => (
                   <div key={unit} className="flex items-center space-x-2">
                     <Checkbox
@@ -458,7 +459,7 @@ export default function UniversityManagement() {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 mt-4 pt-4 border-t">
             <Button
               variant="outline"
               onClick={() => {
@@ -487,12 +488,13 @@ export default function UniversityManagement() {
           if (!open) resetForm()
         }}
       >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Edit University</DialogTitle>
             <DialogDescription>Update university information</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
             <div>
               <Label htmlFor="edit-logo">University Logo</Label>
               <p className="text-sm text-gray-500 mb-2">Upload a new logo or keep the existing one</p>
@@ -538,7 +540,7 @@ export default function UniversityManagement() {
             <div>
               <Label>Units</Label>
               <p className="text-sm text-gray-500 mb-3">Select the units available in this university</p>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 {AVAILABLE_UNITS.map((unit) => (
                   <div key={unit} className="flex items-center space-x-2">
                     <Checkbox
@@ -558,7 +560,7 @@ export default function UniversityManagement() {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 mt-4 pt-4 border-t">
             <Button
               variant="outline"
               onClick={() => {

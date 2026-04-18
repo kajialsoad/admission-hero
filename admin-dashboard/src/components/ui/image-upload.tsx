@@ -148,15 +148,15 @@ export function ImageUpload({
         onDragOver={handleDrag}
         onDrop={handleDrop}
       >
-        <CardContent className="p-3 sm:p-4 lg:p-4 text-center">
-          <div className="flex flex-col items-center space-y-3 sm:space-y-4">
-            <div className="p-3 sm:p-4 rounded-full bg-muted/50 dark:bg-muted/30">
-              <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
+        <CardContent className="p-3 text-center">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="p-2 rounded-full bg-muted/50 dark:bg-muted/30">
+              <Camera className="h-5 w-5 text-muted-foreground" />
             </div>
 
-            <div className="space-y-1 sm:space-y-2">
-              <h3 className="text-base sm:text-lg font-semibold text-foreground">{label}</h3>
-              <p className="text-muted-foreground text-sm sm:text-base">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-foreground">{label}</h3>
+              <p className="text-muted-foreground text-xs">
                 Drag and drop your image here, or click to browse
               </p>
               <p className="text-xs text-muted-foreground">Supports JPEG, PNG, WebP up to {maxSize}MB</p>
@@ -165,11 +165,12 @@ export function ImageUpload({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => document.getElementById(inputId)?.click()}
-              className="bg-transparent hover:bg-accent/50 w-full sm:w-auto"
+              className="bg-transparent hover:bg-accent/50"
               disabled={images.length >= maxFiles}
             >
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload className="h-3 w-3 mr-2" />
               Choose File
             </Button>
 
@@ -203,18 +204,18 @@ export function ImageUpload({
 
       {/* Image Previews */}
       {images.length > 0 && (
-        <div className="grid grid-cols-1 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 gap-2">
           {images.map((image, index) => (
             <Card
               key={image.id}
               className="group relative overflow-hidden bg-card/90 backdrop-blur-sm border-border/50"
             >
               <CardContent className="p-0">
-                <div className="relative aspect-video h-[65px] w-[70px]">
+                <div className="relative h-16 w-20 mx-auto">
                   <img
                     src={image.url || "/placeholder.svg"}
                     alt={`Upload ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105 rounded"
                   />
 
                   {/* Remove Button */}
@@ -222,14 +223,14 @@ export function ImageUpload({
                     type="button"
                     variant="destructive"
                     size="sm"
-                    className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    className="absolute -top-1 -right-1 h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                     onClick={() => removeImage(image.id)}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-2 w-2" />
                   </Button>
 
                   {/* File Info */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1">
                     <Badge variant="secondary" className="text-xs bg-background/80 text-foreground">
                       {(image.file.size / 1024 / 1024).toFixed(1)}MB
                     </Badge>
