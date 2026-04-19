@@ -100,14 +100,7 @@ export const handleBKashCallback = async (req: Request, res: Response) => {
         req.body.paymentId ||
         req.body.payment_id) as string
 
-    // const status =
-    //   (req.query.status ||
-    //     req.query.result ||
-    //     req.body.status ||
-    //     req.body.result) as string
-
-
-        const status = (req.query.status || req.body.status || "").toLowerCase();
+    const status = (req.query.status || req.body.status || "").toLowerCase();
 
     console.log("Extracted --->", { paymentID, status })
 
@@ -127,13 +120,6 @@ export const handleBKashCallback = async (req: Request, res: Response) => {
 
     console.log("Execute API Response:", executeResponse)
 
-    // if (!executeResponse || executeResponse.statusCode !== "0000") {
-    //   console.error("Execute failed:", executeResponse)
-    //   return res.redirect(
-    //     `${DEFAULT_FRONTEND}/(tabs)/subscription?status=failed&reason=execute_failed`
-    //   )
-    // }
-
     // Extract transaction ID from execute response
     const transactionId =
       executeResponse.trxID ||
@@ -141,7 +127,7 @@ export const handleBKashCallback = async (req: Request, res: Response) => {
       executeResponse.transactionID ||
       ""
 
-    // Update user's subscription
+    // Update subscription
     const subscription = await Subscription.findOneAndUpdate(
       { paymentID },
       {
@@ -158,7 +144,15 @@ export const handleBKashCallback = async (req: Request, res: Response) => {
       )
     }
 
-    console.log("Subscription Activated:", subscription._id)
+    // ✅ UPDATE USER SUBSCRIPTION STATUS
+    const User = require('../models/User').default
+    await User.findByIdAndUpdate(subscription.user, {
+      subscriptionStatus: 'paid',
+      subscriptionType: subscription.duration === 1 ? '1-month' : subscription.duration === 3 ? '3-month' : '6-month',
+      subscriptionExpireAt: subscription.expireAt
+    })
+
+    console.log("Subscription Activated and User Updated:", subscription._id)
 
     // Redirect user to success screen
     return res.redirect(
@@ -225,7 +219,15 @@ export const verifyBKashPayment = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: "Subscription not found" })
     }
 
-    console.log("Payment verified successfully:", transactionID)
+    // ✅ UPDATE USER SUBSCRIPTION STATUS
+    const User = require('../models/User').default
+    await User.findByIdAndUpdate(userId, {
+      subscriptionStatus: 'paid',
+      subscriptionType: subscription.duration === 1 ? '1-month' : subscription.duration === 3 ? '3-month' : '6-month',
+      subscriptionExpireAt: subscription.expireAt
+    })
+
+    console.log("Payment verified successfully and user updated:", transactionID)
 
     return res.status(200).json({
       success: true,
