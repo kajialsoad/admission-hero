@@ -65,11 +65,27 @@ class _QuestionsViewScreenState extends State<QuestionsViewScreen> {
                     ]));
                   }
 
+                  if (exam.error != null) {
+                    return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.wifi_off, size: 60, color: AppColors.error),
+                      const SizedBox(height: 12),
+                      Text(exam.error!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => context.read<ExamProvider>().loadExam(widget.questionSet.id),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ]));
+                  }
+
                   if (exam.currentQuestions.isEmpty) {
-                    return const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.description_outlined, size: 60, color: AppColors.textMuted),
-                      SizedBox(height: 12),
-                      Text('No Questions Found', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.description_outlined, size: 60, color: AppColors.textMuted),
+                      const SizedBox(height: 12),
+                      const Text('No Questions Found', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                      const SizedBox(height: 8),
+                      const Text('This question set has no questions yet.', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
                     ]));
                   }
 

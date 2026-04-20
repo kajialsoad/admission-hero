@@ -101,4 +101,13 @@ class ApiService {
 
   Future<Map<String, dynamic>> delete(String endpoint) =>
       _request('DELETE', endpoint);
+
+  // --- Static Helper Methods ---
+  static Future<Map<String, dynamic>?> checkSubscription() => ApiService().get('/subscription/status');
+  static Future<Map<String, dynamic>?> createSubscriptionPayment(Map<String, dynamic> data) => ApiService().post('/subscription/create-payment', data);
+  static Future<Map<String, dynamic>?> executeSubscriptionPayment(Map<String, dynamic> data) => ApiService().post('/subscription/execute-payment', data);
+  static Future<Map<String, dynamic>?> createOrder(Map<String, dynamic> data) => ApiService().post('/orders', data);
+  static Future<Map<String, dynamic>?> getMyOrders({int page = 1, int limit = 20}) => ApiService().get('/orders/my-orders?page=$page&limit=$limit');
+  static Future<Map<String, dynamic>?> getOrder(String id) => ApiService().get('/orders/$id');
+  static Future<Map<String, dynamic>?> sendMessage(Map<String, dynamic> data) => ApiService().post('/messages', data);
 }

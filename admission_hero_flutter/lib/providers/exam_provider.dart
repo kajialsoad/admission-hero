@@ -74,15 +74,23 @@ class ExamProvider extends ChangeNotifier {
   Future<void> loadExam(String setId) async {
     _isLoading = true;
     _error = null;
+    _currentQuestions = [];
     _answers = {};
     _currentQuestionIndex = 0;
     _isSubmitted = false;
     notifyListeners();
 
     try {
-      final response = await _api.get(
-        '${AppConstants.questionSetByIdEndpoint}/$setId/questions',
-      );
+      // Try primary endpoint: /questions/sets/:setId/questions
+      Map<String, dynamic> response;
+      try {
+        response = await _api.get(
+          '${AppConstants.questionSetByIdEndpoint}/$setId/questions',
+        );
+      } catch (e) {
+        // Fallback: try alternate endpoint
+        response = await _api.get('/questions/sets/$setId/questions');
+      }
 
       final data = response['data'];
       if (data is List) {
@@ -98,17 +106,26 @@ class ExamProvider extends ChangeNotifier {
             totalQuestions: _currentQuestions.length,
             createdAt: DateTime.now(),
           );
+        } else {
+          _error = 'No questions found for this exam set.';
         }
       } else if (data is Map<String, dynamic>) {
         _currentSet = QuestionSet.fromJson(data);
         _currentQuestions = _currentSet?.questions ?? [];
+        if (_currentQuestions.isEmpty) {
+          _error = 'No questions found for this exam set.';
+        }
+      } else {
+        _error = 'No questions available.';
       }
 
-      _timeRemaining = _currentQuestions.length * AppConstants.secondsPerQuestion;
+      if (_currentQuestions.isNotEmpty) {
+        _timeRemaining = _currentQuestions.length * AppConstants.secondsPerQuestion;
+      }
     } on ApiException catch (e) {
       _error = e.message;
     } catch (e) {
-      _error = 'Failed to load exam questions.';
+      _error = 'Failed to load exam questions. Check your connection.';
     } finally {
       _isLoading = false;
       notifyListeners();
