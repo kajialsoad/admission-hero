@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import User from '../models/User';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 
 function signToken(id: string) {
   const secret: any = process.env.JWT_SECRET || 'secret';
@@ -11,7 +11,7 @@ function signToken(id: string) {
 }
 
 // Nodemailer transporter for Gmail SMTP
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER || 'mail.admissionhero@gmail.com',
