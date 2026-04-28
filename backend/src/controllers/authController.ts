@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import User from '../models/User';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 function signToken(id: string) {
   const secret: any = process.env.JWT_SECRET || 'secret';
@@ -10,22 +10,8 @@ function signToken(id: string) {
   return jwt.sign({ id }, secret, { expiresIn });
 }
 
-// Email transporter - using port 587 (STARTTLS) for Railway compatibility
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // STARTTLS - works on Railway (port 465/SMTPS is blocked)
-    requireTLS: true,
-    auth: {
-      user: process.env.EMAIL_USER || 'mail.admissionhero@gmail.com',
-      pass: process.env.EMAIL_PASS || 'ttot fkgj lysf pdga',
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
-}
+// Resend HTTP API - works on Railway (no SMTP needed)
+const resend = new Resend(process.env.RESEND_API_KEY || 're_FMJuYZSj_2tLf4Jy7HvedQQ1e4ewL7RUP');
 
 export const register = async (req: Request, res: Response) => {
   const { name, phone, password } = req.body;
@@ -98,11 +84,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
       resetOtpExpiry: otpExpiry,
     });
 
-    // Send email
-    const transporter = createTransporter();
-    await transporter.sendMail({
-      from: `"Admission Hero" <${process.env.EMAIL_USER}>`,
-      to: email,
+    // Send email via Resend (HTTP API - works on Railway)
+    const { error: emailError } = await resend.emails.send({
+      from: 'Admission Hero <onboarding@resend.dev>',
+      to: [email],
       subject: 'পাসওয়ার্ড রিসেট OTP - Admission Hero',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px;">
@@ -116,6 +101,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
         </div>
       `,
     });
+    if (emailError) {
+      console.error('Resend email error:', emailError);
+      throw new Error(emailError.message);
+    }
 
     return res.json({ success: true, message: 'OTP sent to your email' });
   } catch (error: any) {
