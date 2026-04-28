@@ -39,6 +39,10 @@ out/
 .env.*.local
 **/.env
 **/.env.local
+.env.production
+.env.development
+**/.env.production
+**/.env.development
 
 # Logs
 *.log
@@ -123,3 +127,52 @@ temp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Firebase & Sensitive Config Files
+**/firebase-service-account.json
+**/google-services.json
+**/GoogleService-Info.plist
+firebasedetails/
+firebasedetails.zip
+**/*-firebase-adminsdk-*.json
+backend/src/config/firebase-service-account.json
+admission_hero_flutter/android/app/google-services.json
+admission_hero_flutter/ios/Runner/GoogleService-Info.plist
+
+# API Keys & Secrets
+**/*credentials*.json
+**/*secret*.json
+**/*private*.key
+**/*private*.pem
+**/*.p12
+**/*.jks
+**/*.keystore
+
+# Environment & Config Files
+backend/.env
+admin-dashboard/.env
+frontend/.env
+**/.env.local
+**/.env.production
+**/.env.development
+**/local.properties
+
+# Test & Debug Files
+test_*.js
+manual_test.js
+**/test-*.js
+build_apk.bat
+check-railway-setup.sh
+update-railway-url.bat
+update-railway-url.sh
+
+# Temporary & Build Files
+*.tmp
+*.temp
+**/temp_input.txt
+**/flutter_input.txt
+analyze_output.txt
+
+# Package Lock Files (optional - uncomment if needed)
+# package-lock.json
+# **/package-lock.json
