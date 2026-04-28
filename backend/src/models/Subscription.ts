@@ -14,6 +14,8 @@ export interface ISubscription extends Document {
   invoiceNumber?: string;
   amount?: number;
   duration?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const SubscriptionSchema = new Schema({
