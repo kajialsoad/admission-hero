@@ -157,13 +157,29 @@ class _AuthScreenState extends State<AuthScreen>
               child: Column(
                 children: [
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 120,
+                    height: 120,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 24,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.school, size: 44, color: Colors.white),
+                    padding: const EdgeInsets.all(10),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/app_icon.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.school, size: 70, color: AppColors.primary);
+                        },
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(

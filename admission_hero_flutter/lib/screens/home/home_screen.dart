@@ -138,12 +138,36 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
-          const Text('🎓', style: TextStyle(fontSize: 32)),
-          const SizedBox(width: 8),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(5),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/app_icon.png',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.school, size: 32, color: AppColors.primary);
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
           const Text(
             'Admission Hero',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.w700,
               color: Colors.white,
               letterSpacing: -0.3,
