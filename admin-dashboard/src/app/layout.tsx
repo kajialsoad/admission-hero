@@ -8,8 +8,11 @@ import { Providers } from "../providers/Providers"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Addmision Hero",
+  title: "Admission Hero Admin",
   description: "Manage All University Question Bank.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 }
 
 export default function RootLayout({

@@ -2,21 +2,29 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface INotification extends Document {
   _id: string;
-  userId: string;
+  userId?: string;
   title: string;
   message: string;
+  body?: string; // For Firebase compatibility
   type: 'exam' | 'payment' | 'system' | 'chat' | 'announcement';
   isRead: boolean;
   timestamp: Date;
   data?: any;
   priority: 'low' | 'medium' | 'high';
   expiresAt?: Date;
+  
+  // Firebase specific fields
+  tokens?: string[]; // FCM tokens
+  topic?: string; // Firebase topic
+  users?: string[]; // Target users
+  sentAt?: Date;
+  sentBy?: string;
 }
 
 const NotificationSchema: Schema = new Schema({
   userId: {
     type: String,
-    required: true,
+    required: false, // Made optional for Firebase notifications
   },
   title: {
     type: String,
@@ -24,7 +32,10 @@ const NotificationSchema: Schema = new Schema({
   },
   message: {
     type: String,
-    required: true,
+    required: false, // Made optional for Firebase notifications
+  },
+  body: {
+    type: String, // Firebase compatibility
   },
   type: {
     type: String,
@@ -49,6 +60,23 @@ const NotificationSchema: Schema = new Schema({
   },
   expiresAt: {
     type: Date,
+  },
+  
+  // Firebase specific fields
+  tokens: [{
+    type: String,
+  }],
+  topic: {
+    type: String,
+  },
+  users: [{
+    type: String,
+  }],
+  sentAt: {
+    type: Date,
+  },
+  sentBy: {
+    type: String,
   },
 }, {
   timestamps: true,

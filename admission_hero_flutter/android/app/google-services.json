@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1066300392478",
+    "project_id": "admission-hero",
+    "storage_bucket": "admission-hero.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066300392478:android:f06c61f83263d1d7ab9a0f",
+        "android_client_info": {
+          "package_name": "com.admissionhero.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1066300392478-06m5dd85q7dj4eq47tnj7b7anpfa7vqv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqvum5plwm3BndV3ze-xD2qpD0jq0OtlQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1066300392478-06m5dd85q7dj4eq47tnj7b7anpfa7vqv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,14 +4,7 @@ import { ShoppingBag, Users, Package, TrendingUp, Clock, CheckCircle, XCircle, A
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
 import { useGetDashboardStatsQuery } from "../../store/api/dashboardApi"
 
-const mockChartData = [
-  { name: "Jan", orders: 65, revenue: 12000 },
-  { name: "Feb", orders: 59, revenue: 15000 },
-  { name: "Mar", orders: 80, revenue: 18000 },
-  { name: "Apr", orders: 81, revenue: 22000 },
-  { name: "May", orders: 56, revenue: 16000 },
-  { name: "Jun", orders: 95, revenue: 28000 },
-]
+// Removed mockChartData since we're fetching dynamic data
   
 export default function DashboardPage() {
   const { data, error, isLoading } = useGetDashboardStatsQuery()
@@ -27,32 +20,32 @@ export default function DashboardPage() {
 
   const statCards = [
     {
-      title: "Total Universtiy",
-      value: stats.totalOrders,
+      title: "Total Exams",
+      value: stats.totalExams || 0,
       icon: ShoppingBag,
       color: "bg-blue-500",
-      change: "+12%",
+      change: "",
     },
     {
       title: "Total Users",
-      value: stats.totalUsers,
+      value: stats.totalUsers || 0,
       icon: Users,
       color: "bg-green-500",
-      change: "+8%",
+      change: "",
     },
     {
       title: "Total Questions",
-      value: stats.totalProducts,
+      value: stats.totalQuestions || 0,
       icon: Package,
       color: "bg-purple-500",
-      change: "+15%",
+      change: "",
     },
     {
       title: "Total Revenue",
-      value: `৳${stats.totalRevenue.toLocaleString()}`,
+      value: `৳${(stats.totalRevenue || 0).toLocaleString()}`,
       icon: TrendingUp,
       color: "bg-yellow-500",
-      change: "+23%",
+      change: "",
     },
   ]
 
@@ -165,9 +158,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Orders Chart */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Orders</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Subscriptions</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mockChartData}>
+            <BarChart data={stats.graphData || []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -181,7 +174,7 @@ export default function DashboardPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Revenue</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={mockChartData}>
+            <LineChart data={stats.graphData || []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -189,6 +182,58 @@ export default function DashboardPage() {
               <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Recent Payments Section */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="px-6 py-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">Recent Payments</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {stats.recentPayments && stats.recentPayments.length > 0 ? (
+                stats.recentPayments.map((payment: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{payment.user?.name || "Unknown"}</div>
+                      <div className="text-sm text-gray-500">{payment.user?.phone || payment.user?.email || ""}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        {payment.packageName || "Unknown"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ৳{payment.amount || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(payment.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 uppercase">
+                      {payment.paymentMethod || "bKash"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                    No recent payments found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

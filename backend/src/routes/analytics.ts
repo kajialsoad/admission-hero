@@ -1,7 +1,7 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import Analytics from '../models/Analytics';
-import auth from '../middlewares/auth';
+import { protect, adminOnly } from '../middlewares/auth';
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/track', [
   body('eventType').isIn(['login', 'exam_start', 'exam_complete', 'payment', 'video_watch', 'page_view']),
   body('eventData').isObject(),
-], async (req, res) => {
+], async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -56,7 +56,7 @@ router.post('/track', [
 });
 
 // Get analytics dashboard data (admin only)
-router.get('/dashboard', auth, async (req, res) => {
+router.get('/dashboard', protect, adminOnly, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     if (user.role !== 'admin') {
@@ -163,7 +163,7 @@ router.get('/dashboard', auth, async (req, res) => {
 });
 
 // Get user analytics (for individual user)
-router.get('/user', auth, async (req, res) => {
+router.get('/user', protect, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     const { startDate, endDate } = req.query;
@@ -229,7 +229,7 @@ router.get('/user', auth, async (req, res) => {
 });
 
 // Get real-time stats (admin only)
-router.get('/realtime', auth, async (req, res) => {
+router.get('/realtime', protect, adminOnly, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     if (user.role !== 'admin') {

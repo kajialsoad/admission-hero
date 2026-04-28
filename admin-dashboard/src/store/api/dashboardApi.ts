@@ -7,6 +7,11 @@ export interface DashboardStats {
   pendingOrders: number
   pendingProducts: number
   totalRevenue: number
+  totalExams?: number
+  totalQuestions?: number
+  totalVideos?: number
+  graphData?: { name: string; orders: number; revenue: number }[]
+  recentPayments?: any[]
 }
 
 export interface DashboardResponse {

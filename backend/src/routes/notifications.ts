@@ -1,12 +1,28 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import Notification from '../models/Notification';
-import auth from '../middlewares/auth';
+import { protect, adminOnly } from '../middlewares/auth';
+import {
+  sendNotification,
+  getNotificationHistory,
+  subscribeUserToTopic,
+  unsubscribeUserFromTopic,
+  updateFCMToken,
+} from '../controllers/notificationController';
 
 const router = express.Router();
 
+// Firebase notification routes (admin only)
+router.post('/send', protect, adminOnly, sendNotification);
+router.get('/history', protect, adminOnly, getNotificationHistory);
+router.post('/subscribe-topic', protect, adminOnly, subscribeUserToTopic);
+router.post('/unsubscribe-topic', protect, adminOnly, unsubscribeUserFromTopic);
+
+// Update FCM token (authenticated users)
+router.post('/update-token', protect, updateFCMToken);
+
 // Get user notifications
-router.get('/', auth, async (req, res) => {
+router.get('/', protect, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     const { page = 1, limit = 20, type, isRead } = req.query;
@@ -47,13 +63,13 @@ router.get('/', auth, async (req, res) => {
 
 // Create notification (admin only)
 router.post('/', [
-  auth,
+  protect,
   body('userId').optional().isString(),
   body('title').notEmpty().withMessage('Title is required'),
   body('message').notEmpty().withMessage('Message is required'),
   body('type').optional().isIn(['exam', 'payment', 'system', 'chat', 'announcement']),
   body('priority').optional().isIn(['low', 'medium', 'high']),
-], async (req, res) => {
+], async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     if (user.role !== 'admin') {
@@ -112,7 +128,7 @@ router.post('/', [
 });
 
 // Mark notification as read
-router.put('/:id/read', auth, async (req, res) => {
+router.put('/:id/read', protect, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const user = (req as any).user;
@@ -144,7 +160,7 @@ router.put('/:id/read', auth, async (req, res) => {
 });
 
 // Mark all notifications as read
-router.put('/read-all', auth, async (req, res) => {
+router.put('/read-all', protect, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
 
@@ -167,7 +183,7 @@ router.put('/read-all', auth, async (req, res) => {
 });
 
 // Delete notification
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', protect, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const user = (req as any).user;
@@ -198,7 +214,7 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 // Get notification statistics
-router.get('/stats', auth, async (req, res) => {
+router.get('/stats', protect, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
 
@@ -237,3 +253,5 @@ router.get('/stats', auth, async (req, res) => {
 });
 
 export default router;
+
+

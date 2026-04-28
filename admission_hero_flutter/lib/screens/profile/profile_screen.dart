@@ -14,13 +14,19 @@ class ProfileScreen extends StatelessWidget {
     final user = auth.user;
 
     final menuItems = [
+      _MenuItem(id: 'edit-profile', title: 'Edit Profile', icon: Icons.edit_outlined,
+          onTap: () => Navigator.pushNamed(context, '/edit-profile')),
       _MenuItem(id: 'subscription', title: 'My Subscription', icon: Icons.card_membership_outlined,
           onTap: () => Navigator.pushNamed(context, '/subscription-details')),
       _MenuItem(id: 'performance', title: 'My Performance', icon: Icons.insights_outlined,
           onTap: () => Navigator.pushNamed(context, '/performance')),
       _MenuItem(id: 'support', title: 'Help & Support', icon: Icons.help_outline_rounded,
           onTap: () => Navigator.pushNamed(context, '/support')),
-      _MenuItem(id: 'settings', title: 'Settings', icon: Icons.settings_outlined, onTap: () {}),
+      _MenuItem(id: 'settings', title: 'Settings', icon: Icons.settings_outlined, 
+          onTap: () => Navigator.pushNamed(context, '/settings')),
+      if (user != null) // Only show for logged in users
+        _MenuItem(id: 'feature-test', title: 'Feature Tests', icon: Icons.bug_report_outlined, 
+            onTap: () => Navigator.pushNamed(context, '/feature-test')),
     ];
 
     return AnnotatedRegion<SystemUiOverlayStyle>(

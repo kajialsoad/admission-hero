@@ -171,9 +171,12 @@ class _BkashPaymentModalState extends State<BkashPaymentModal> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('Features', style: TextStyle(fontWeight: FontWeight.bold, marginBottom: 12)),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: const Text('Features', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
                       ),
                       ...widget.features.map((f) => Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),

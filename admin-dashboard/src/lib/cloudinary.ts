@@ -1,3 +1,5 @@
+import Cookies from 'js-cookie'
+
 export interface CloudinaryUploadResponse {
   secure_url: string
   public_id: string
@@ -7,34 +9,41 @@ export interface CloudinaryUploadResponse {
 }
 
 export async function uploadToCloudinary(file: File): Promise<string> {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
-
-  if (!cloudName || !uploadPreset) {
-    throw new Error(
-      "Cloudinary configuration is missing. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET",
-    )
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://munns-production.up.railway.app/api'
+  
+  // Get auth token from cookies (admin dashboard uses cookies, not localStorage)
+  const token = typeof window !== 'undefined' ? Cookies.get('admin_token') : null
+  
+  if (!token) {
+    throw new Error('Authentication required. Please login first.')
   }
 
   const formData = new FormData()
-  formData.append("file", file)
-  formData.append("upload_preset", uploadPreset)
-  formData.append("folder", "bazarey-banners")
+  formData.append('image', file)
 
   try {
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: "POST",
+    const response = await fetch(`${apiUrl}/uploads/image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
       body: formData,
     })
 
     if (!response.ok) {
-      throw new Error("Failed to upload image to Cloudinary")
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Failed to upload image')
     }
 
-    const data: CloudinaryUploadResponse = await response.json()
-    return data.secure_url
+    const result = await response.json()
+    
+    if (!result.success || !result.data?.url) {
+      throw new Error('Invalid response from upload server')
+    }
+
+    return result.data.url
   } catch (error) {
-    console.error("Cloudinary upload error:", error)
+    console.error('Image upload error:', error)
     throw error
   }
 }

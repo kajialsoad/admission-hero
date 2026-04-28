@@ -57,12 +57,24 @@ class ExamProvider extends ChangeNotifier {
       params['limit'] = limit.toString();
 
       final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
-      final response = await _api.get('${AppConstants.questionSetsEndpoint}?$query');
+      final url = '${AppConstants.questionSetsEndpoint}?$query';
+      
+      print('DEBUG: Fetching question sets from: ${AppConstants.baseUrl}$url');
+      print('DEBUG: Parameters - universityId: $universityId, unit: $unit, session: $session');
+      
+      final response = await _api.get(url, requiresAuth: false);
+      print('DEBUG: API Response: $response');
+      
       final List<dynamic> data = response['data'] ?? [];
+      print('DEBUG: Found ${data.length} question sets');
+      
       _questionSets = data.map((s) => QuestionSet.fromJson(s)).toList();
+      print('DEBUG: Parsed ${_questionSets.length} question sets successfully');
     } on ApiException catch (e) {
+      print('DEBUG: API Exception: ${e.message}');
       _error = e.message;
     } catch (e) {
+      print('DEBUG: General Exception: $e');
       _error = 'Failed to load exams.';
     } finally {
       _isLoading = false;
@@ -81,16 +93,11 @@ class ExamProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Try primary endpoint: /questions/sets/:setId/questions
-      Map<String, dynamic> response;
-      try {
-        response = await _api.get(
-          '${AppConstants.questionSetByIdEndpoint}/$setId/questions',
-        );
-      } catch (e) {
-        // Fallback: try alternate endpoint
-        response = await _api.get('/questions/sets/$setId/questions');
-      }
+      // Questions endpoint is public — no auth needed
+      final response = await _api.get(
+        '/questions/sets/$setId/questions',
+        requiresAuth: false,
+      );
 
       final data = response['data'];
       if (data is List) {
@@ -100,7 +107,9 @@ class ExamProvider extends ChangeNotifier {
           _currentSet = QuestionSet(
             id: first.questionSetId ?? setId,
             name: 'Question Set',
-            university: first.university ?? {},
+            university: first.university is Map<String, dynamic> 
+                ? first.university as Map<String, dynamic>
+                : {'_id': first.university ?? '', 'name': 'Unknown University'},
             unit: first.unit ?? '',
             session: first.session ?? '',
             totalQuestions: _currentQuestions.length,
@@ -123,8 +132,10 @@ class ExamProvider extends ChangeNotifier {
         _timeRemaining = _currentQuestions.length * AppConstants.secondsPerQuestion;
       }
     } on ApiException catch (e) {
+      print('DEBUG: loadExam ApiException: ${e.message}');
       _error = e.message;
     } catch (e) {
+      print('DEBUG: loadExam unexpected error: $e');
       _error = 'Failed to load exam questions. Check your connection.';
     } finally {
       _isLoading = false;
@@ -194,12 +205,18 @@ class ExamProvider extends ChangeNotifier {
     );
 
     try {
-      final response = await _api.post(
-        AppConstants.submitExamEndpoint,
-        result.toJson(),
-      );
-      _lastResult = ExamResult.fromJson(response['data'] ?? result.toJson());
-    } catch (_) {
+      print('DEBUG: Submitting exam to backend...');
+      final response = await ApiService.submitExam(result.toJson());
+      
+      if (response != null && response['success'] == true) {
+        print('DEBUG: Exam submitted successfully to backend');
+        _lastResult = ExamResult.fromJson(response['data']);
+      } else {
+        print('DEBUG: Backend submission failed, using local result');
+        _lastResult = result;
+      }
+    } catch (e) {
+      print('DEBUG: Error submitting to backend: $e');
       // Save locally even if backend fails
       _lastResult = result;
     }
@@ -207,6 +224,36 @@ class ExamProvider extends ChangeNotifier {
     _isSubmitted = true;
     notifyListeners();
     return _lastResult;
+  }
+
+  // ── Get Performance Stats ──────────────────────────────────────────────────
+  Future<Map<String, dynamic>?> getPerformanceStats() async {
+    try {
+      final response = await ApiService.getPerformanceStats();
+      if (response != null && response['success'] == true) {
+        return response['data'];
+      }
+    } catch (e) {
+      print('DEBUG: Error getting performance stats: $e');
+    }
+    return null;
+  }
+
+  // ── Get Recent Exam Results ────────────────────────────────────────────────
+  Future<List<ExamResult>> getRecentExamResults({int limit = 5}) async {
+    try {
+      final response = await ApiService.getRecentExamResults(limit: limit);
+      if (response != null && response['success'] == true) {
+        final results = <ExamResult>[];
+        for (var resultData in response['data']) {
+          results.add(ExamResult.fromJson(resultData));
+        }
+        return results;
+      }
+    } catch (e) {
+      print('DEBUG: Error getting recent exam results: $e');
+    }
+    return [];
   }
 
   void resetExam() {

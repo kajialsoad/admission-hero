@@ -1,4 +1,4 @@
-package com.example.admission_hero_flutter
+package com.admissionhero.app
 
 import io.flutter.embedding.android.FlutterActivity
 

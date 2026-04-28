@@ -1,12 +1,12 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import ChatMessage from '../models/ChatMessage';
-import auth from '../middlewares/auth';
+import { protect, adminOnly } from '../middlewares/auth';
 
 const router = express.Router();
 
 // Get chat messages for a conversation
-router.get('/conversation/:conversationId', auth, async (req, res) => {
+router.get('/conversation/:conversationId', protect, async (req: Request, res: Response) => {
   try {
     const { conversationId } = req.params;
     const { page = 1, limit = 50 } = req.query;
@@ -36,11 +36,11 @@ router.get('/conversation/:conversationId', auth, async (req, res) => {
 
 // Send a chat message
 router.post('/send', [
-  auth,
+  protect,
   body('message').notEmpty().withMessage('Message is required'),
   body('conversationId').notEmpty().withMessage('Conversation ID is required'),
   body('messageType').optional().isIn(['text', 'image', 'file']),
-], async (req, res) => {
+], async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -86,7 +86,7 @@ router.post('/send', [
 });
 
 // Mark messages as read
-router.put('/read/:conversationId', auth, async (req, res) => {
+router.put('/read/:conversationId', protect, async (req: Request, res: Response) => {
   try {
     const { conversationId } = req.params;
     const user = (req as any).user;
@@ -114,7 +114,7 @@ router.put('/read/:conversationId', auth, async (req, res) => {
 });
 
 // Get unread message count
-router.get('/unread/:conversationId', auth, async (req, res) => {
+router.get('/unread/:conversationId', protect, async (req: Request, res: Response) => {
   try {
     const { conversationId } = req.params;
     const user = (req as any).user;
@@ -140,10 +140,10 @@ router.get('/unread/:conversationId', auth, async (req, res) => {
 
 // Auto-response for support (simulate admin response)
 router.post('/auto-response', [
-  auth,
+  protect,
   body('message').notEmpty().withMessage('Message is required'),
   body('conversationId').notEmpty().withMessage('Conversation ID is required'),
-], async (req, res) => {
+], async (req: Request, res: Response) => {
   try {
     const { message, conversationId } = req.body;
 
@@ -193,3 +193,5 @@ router.post('/auto-response', [
 });
 
 export default router;
+
+

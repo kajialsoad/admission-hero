@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import '../services/firebase_service.dart';
 import '../utils/constants.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -14,9 +15,11 @@ class AuthProvider extends ChangeNotifier {
   String? get token => _token;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null && _token != null;
+  bool get isInitialized => !_isLoading;
   String? get errorMessage => _errorMessage;
 
   final ApiService _api = ApiService();
+  final FirebaseService _firebase = FirebaseService();
 
   // ── Initialize (restore session) ──────────────────────────────────────────
   Future<void> initialize() async {
@@ -30,6 +33,11 @@ class AuthProvider extends ChangeNotifier {
       if (token != null && user != null) {
         _token = token;
         _user = user;
+
+        // Sync Firebase user after restoring session
+        await _firebase.setUserId(user.id);
+        await _firebase.syncTokenAfterLogin();
+        debugPrint('✅ Session restored for user: ${user.name}');
       }
     } catch (e) {
       debugPrint('AuthProvider init error: $e');
@@ -66,6 +74,11 @@ class AuthProvider extends ChangeNotifier {
 
       await StorageService.saveToken(token);
       await StorageService.saveUser(_user!);
+
+      // ── Firebase hooks after login ──────────────────────────────────────
+      await _firebase.setUserId(_user!.id);
+      await _firebase.syncTokenAfterLogin();
+      await _firebase.logLogin('phone');
 
       notifyListeners();
       return true;
@@ -106,6 +119,12 @@ class AuthProvider extends ChangeNotifier {
         _user = UserModel.fromJson(response['user']);
         await StorageService.saveToken(_token!);
         await StorageService.saveUser(_user!);
+
+        // ── Firebase hooks after register ─────────────────────────────────
+        await _firebase.setUserId(_user!.id);
+        await _firebase.syncTokenAfterLogin();
+        await _firebase.logSignUp('phone');
+
         notifyListeners();
         return {'success': true, 'autoLogin': true};
       }
@@ -122,8 +141,68 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // ── Update User ───────────────────────────────────────────────────────────
+  Future<bool> updateUser({
+    required String name,
+    required String email,
+    required String phone,
+  }) async {
+    _errorMessage = null;
+    try {
+      final response = await _api.put(
+        AppConstants.profileEndpoint,
+        {
+          'name': name.trim(),
+          'email': email.trim(),
+          'phone': phone.trim(),
+        },
+      );
+
+      final userData = response['user'];
+      if (userData != null) {
+        _user = UserModel.fromJson(userData);
+        await StorageService.saveUser(_user!);
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'Update failed. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ── Forgot Password ───────────────────────────────────────────────────────
+  Future<bool> forgotPassword(String email) async {
+    _errorMessage = null;
+    try {
+      await _api.post(
+        '/auth/forgot-password',
+        {'email': email.trim()},
+        requiresAuth: false,
+      );
+      return true;
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'Failed to send reset email. Please try again.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   // ── Logout ─────────────────────────────────────────────────────────────────
   Future<void> logout() async {
+    // ── Firebase clear on logout ───────────────────────────────────────────
+    await _firebase.clearUserId();
+
     _user = null;
     _token = null;
     _errorMessage = null;

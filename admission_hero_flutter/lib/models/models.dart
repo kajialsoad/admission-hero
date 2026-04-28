@@ -80,6 +80,17 @@ class University {
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'name': name,
+      'shortName': shortName,
+      'logo': logo,
+      'units': units,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
 }
 
 
@@ -96,6 +107,13 @@ class QuestionOption {
       text: json['text'] ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'key': key,
+      'text': text,
+    };
+  }
 }
 
 
@@ -103,7 +121,7 @@ class QuestionOption {
 class Question {
   final String id;
   final String? questionSetId;
-  final Map<String, dynamic>? university;
+  final dynamic university; // Can be either String (ID) or Map<String, dynamic> (object)
   final String? unit;
   final String? session;
   final int questionNumber;
@@ -127,11 +145,29 @@ class Question {
     this.explanations,
   });
 
+  // Helper getter to get university ID regardless of format
+  String? get universityId {
+    if (university is String) {
+      return university as String;
+    } else if (university is Map<String, dynamic>) {
+      return university['_id'] ?? university['id'];
+    }
+    return null;
+  }
+
+  // Helper getter to get university name if available
+  String? get universityName {
+    if (university is Map<String, dynamic>) {
+      return university['name'];
+    }
+    return null;
+  }
+
   factory Question.fromJson(Map<String, dynamic> json) {
     return Question(
       id: json['_id'] ?? '',
       questionSetId: json['questionSetId'],
-      university: json['university'],
+      university: json['university'], // Accept both String and Map
       unit: json['unit'],
       session: json['session'],
       questionNumber: json['questionNumber'] ?? 0,
@@ -145,6 +181,22 @@ class Question {
           ? List<Map<String, dynamic>>.from(json['explanations'])
           : null,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'questionSetId': questionSetId,
+      'university': university,
+      'unit': unit,
+      'session': session,
+      'questionNumber': questionNumber,
+      'text': text,
+      'questionType': questionType,
+      'options': options.map((o) => o.toJson()).toList(),
+      'correctAnswer': correctAnswer,
+      'explanations': explanations,
+    };
   }
 }
 
@@ -195,6 +247,21 @@ class QuestionSet {
           : null,
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'name': name,
+      'university': university,
+      'unit': unit,
+      'session': session,
+      'totalQuestions': totalQuestions,
+      'description': description,
+      'videoUrl': videoUrl,
+      'questions': questions?.map((q) => q.toJson()).toList(),
+      'createdAt': createdAt.toIso8601String(),
+    };
   }
 }
 

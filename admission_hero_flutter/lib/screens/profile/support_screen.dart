@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
+import '../chat/chat_screen.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -44,11 +45,25 @@ class _SupportScreenState extends State<SupportScreen> {
                   const Text('Contact Us', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                   const SizedBox(height: 12),
                   Row(children: [
-                    Expanded(child: _contactCard(Icons.chat_bubble_outline, 'Live Chat', 'Chat with support')),
+                    Expanded(child: _contactCard(Icons.chat_bubble_outline, 'Live Chat', 'Chat with support', () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const ChatScreen()),
+                      );
+                    })),
                     const SizedBox(width: 12),
-                    Expanded(child: _contactCard(Icons.email_outlined, 'Email', 'Get help via email')),
+                    Expanded(child: _contactCard(Icons.email_outlined, 'Email', 'Get help via email', () {
+                      // TODO: Open email app
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Email: support@admission-hero.com')),
+                      );
+                    })),
                     const SizedBox(width: 12),
-                    Expanded(child: _contactCard(Icons.phone_outlined, 'Call Us', 'Talk to our team')),
+                    Expanded(child: _contactCard(Icons.phone_outlined, 'Call Us', 'Talk to our team', () {
+                      // TODO: Make phone call
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Call: +880 1234 567890')),
+                      );
+                    })),
                   ]),
 
                   const SizedBox(height: 30),
@@ -115,20 +130,23 @@ class _SupportScreenState extends State<SupportScreen> {
     );
   }
 
-  Widget _contactCard(IconData icon, String title, String desc) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+  Widget _contactCard(IconData icon, String title, String desc, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(children: [
+          Icon(icon, color: AppColors.primary, size: 28),
+          const SizedBox(height: 8),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textPrimary)),
+          const SizedBox(height: 2),
+          Text(desc, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+        ]),
       ),
-      child: Column(children: [
-        Icon(icon, color: AppColors.primary, size: 28),
-        const SizedBox(height: 8),
-        Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textPrimary)),
-        const SizedBox(height: 2),
-        Text(desc, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
-      ]),
     );
   }
 

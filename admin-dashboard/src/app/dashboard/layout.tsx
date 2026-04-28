@@ -16,14 +16,15 @@ export default function DashboardLayout({
   const router = useRouter()
 
   useEffect(() => {
-    console.log("DashboardLayout useEffect:", { user, loading, isAuthenticated, userRole: user?.role })
+    // Wait until AuthProvider finishes its async check before deciding
+    if (loading) return
 
-    if (!loading && (!isAuthenticated || !user || user.role !== "admin")) {
-      console.log("Redirecting to login - Auth check failed")
+    if (!isAuthenticated || !user || user.role !== "admin") {
       router.push("/")
     }
   }, [user, loading, isAuthenticated, router])
 
+  // While auth is being restored from cookies/API, show spinner
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -32,6 +33,7 @@ export default function DashboardLayout({
     )
   }
 
+  // Auth resolved but not valid - show spinner briefly while redirect fires
   if (!isAuthenticated || !user || user.role !== "admin") {
     return (
       <div className="min-h-screen flex items-center justify-center">

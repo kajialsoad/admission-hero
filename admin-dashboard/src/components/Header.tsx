@@ -1,10 +1,10 @@
 "use client"
 
 import { useAppSelector } from "../hooks/useAppSelector"
-import { Bell, Search, Settings, Moon, Sun } from "lucide-react"
+import { Search, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -130,7 +130,7 @@ export default function Header() {
                   className="gap-2 px-2 hover:bg-gray-100"
                 >
                   <Avatar className="h-8 w-8 border-2 border-emerald-100">
-                    <AvatarImage src="https://github.com/shadcn.png" />
+                    {/* No external avatar image - fallback shows user initial */}
                     <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-semibold">
                       {user?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>

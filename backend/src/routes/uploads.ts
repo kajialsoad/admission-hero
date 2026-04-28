@@ -1,7 +1,7 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
-import auth from '../middlewares/auth';
+import { protect, adminOnly } from '../middlewares/auth';
 
 const router = express.Router();
 
@@ -34,13 +34,13 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type'), false);
+      cb(new Error('Invalid file type') as any, false);
     }
   },
 });
 
 // Upload single image
-router.post('/image', [auth, upload.single('image')], async (req, res) => {
+router.post('/image', [protect, upload.single('image')], async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -90,7 +90,7 @@ router.post('/image', [auth, upload.single('image')], async (req, res) => {
 });
 
 // Upload multiple images
-router.post('/images', [auth, upload.array('images', 5)], async (req, res) => {
+router.post('/images', [protect, upload.array('images', 5)], async (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];
     
@@ -145,7 +145,7 @@ router.post('/images', [auth, upload.array('images', 5)], async (req, res) => {
 });
 
 // Upload document/file
-router.post('/document', [auth, upload.single('document')], async (req, res) => {
+router.post('/document', [protect, upload.single('document')], async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -190,7 +190,7 @@ router.post('/document', [auth, upload.single('document')], async (req, res) => 
 });
 
 // Delete uploaded file
-router.delete('/:publicId', auth, async (req, res) => {
+router.delete('/:publicId', protect, async (req: Request, res: Response) => {
   try {
     const { publicId } = req.params;
     const { resourceType = 'image' } = req.query;
@@ -213,7 +213,7 @@ router.delete('/:publicId', auth, async (req, res) => {
 });
 
 // Get upload signature for client-side uploads
-router.post('/signature', auth, async (req, res) => {
+router.post('/signature', protect, async (req: Request, res: Response) => {
   try {
     const { folder = 'admission-hero', resourceType = 'image' } = req.body;
     
@@ -248,3 +248,5 @@ router.post('/signature', auth, async (req, res) => {
 });
 
 export default router;
+
+

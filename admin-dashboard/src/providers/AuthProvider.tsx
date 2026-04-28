@@ -33,9 +33,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (response.ok) {
             const result = await response.json()
-            if (result.success && result.data) {
+            if (result.success && result.user) {
               // Successfully got user profile, restore full auth state
-              dispatch(setCredentials({ user: result.data, token }))
+              dispatch(setCredentials({ user: result.user, token }))
             } else {
               // Invalid response, clear auth
               Cookies.remove("admin_token")

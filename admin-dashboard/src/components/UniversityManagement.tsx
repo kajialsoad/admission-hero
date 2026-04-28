@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import Image from "next/image"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -301,13 +300,16 @@ export default function UniversityManagement() {
                 universities.map((university) => (
                   <tr key={university._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
-                      <div className="relative h-12 w-12 rounded overflow-hidden bg-gray-100 border border-gray-200">
-                        <Image
-                          src={university.logo || "/placeholder.svg"}
-                          alt={university.name}
-                          fill
-                          className="object-contain"
-                        />
+                      <div className="h-12 w-12 rounded overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+                        {university.logo ? (
+                          <img
+                            src={university.logo}
+                            alt={university.name}
+                            className="h-full w-full object-contain"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden') }}
+                          />
+                        ) : null}
+                        <GraduationCap className={`h-6 w-6 text-gray-400 ${university.logo ? 'hidden' : ''}`} />
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -501,8 +503,8 @@ export default function UniversityManagement() {
               {logoUrl && !isUploadingImage && (
                 <div className="mb-3">
                   <p className="text-sm text-gray-600 mb-2">Current Logo:</p>
-                  <div className="relative h-12 w-12 rounded overflow-hidden bg-gray-100 border border-gray-200">
-                    <Image src={logoUrl || "/placeholder.svg"} alt="Current logo" fill className="object-contain" />
+                  <div className="h-12 w-12 rounded overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+                    <img src={logoUrl} alt="Current logo" className="h-full w-full object-contain" />
                   </div>
                 </div>
               )}

@@ -33,9 +33,9 @@ class _QuestionsViewScreenState extends State<QuestionsViewScreen> {
           children: [
             // Header
             Container(
-              color: Colors.white,
               padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 8, left: 8, right: 16, bottom: 12),
               decoration: const BoxDecoration(
+                color: Colors.white,
                 border: Border(bottom: BorderSide(color: AppColors.border)),
               ),
               child: Row(children: [
