@@ -15,14 +15,17 @@ function createTransporter() {
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: process.env.EMAIL_USER || 'mail.admissionhero@gmail.com',
+      pass: process.env.EMAIL_PASS || 'ttot fkgj lysf pdga',
     },
   });
 }
 
 export const register = async (req: Request, res: Response) => {
-  const { name, email, phone, password } = req.body;
+  const { name, phone, password } = req.body;
+  let { email } = req.body;
+  if (email) email = email.trim().toLowerCase();
+
   const existing = await User.findOne({ $or: [{ email }, { phone }] });
   if (existing) return res.status(400).json({ error: 'User exists with given email or phone' });
   const user = await User.create({ name, email, phone, password, isVerified: !!email });
@@ -42,7 +45,7 @@ export const login = async (req: Request, res: Response) => {
 
     // Find by email or phone
     const user = await User.findOne({
-      $or: [{ email: phoneOrEmail }, { phone: phoneOrEmail }],
+      $or: [{ email: phoneOrEmail.trim().toLowerCase() }, { phone: phoneOrEmail.trim() }],
     }).select("+password");
 
     if (!user) {
@@ -76,7 +79,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
     const user = await User.findOne({ email: email.trim().toLowerCase() });
-    if (!user) return res.status(404).json({ error: 'No account found with this email' });
+    if (!user) return res.status(404).json({ error: 'No account found with this email. Please check the spelling.' });
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
