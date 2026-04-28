@@ -10,13 +10,19 @@ function signToken(id: string) {
   return jwt.sign({ id }, secret, { expiresIn });
 }
 
-// Email transporter (Gmail SMTP or any SMTP)
+// Email transporter - using port 587 (STARTTLS) for Railway compatibility
 function createTransporter() {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // STARTTLS - works on Railway (port 465/SMTPS is blocked)
+    requireTLS: true,
     auth: {
       user: process.env.EMAIL_USER || 'mail.admissionhero@gmail.com',
       pass: process.env.EMAIL_PASS || 'ttot fkgj lysf pdga',
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 }
