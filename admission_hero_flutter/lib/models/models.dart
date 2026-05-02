@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 // ─── User Model ────────────────────────────────────────────────────────────────
 class UserModel {
   final String id;
@@ -361,5 +363,232 @@ class AnswerReview {
       selected: json['selected'] ?? '',
       correct: json['correct'] ?? '',
     );
+  }
+}
+
+
+// ─── Package Model ─────────────────────────────────────────────────────────────
+class Package {
+  final String id;
+  final String type;
+  final String name;
+  final int durationDays;
+  final double price;
+  final List<String> features;
+  final String status;
+  final String? videoUrl;
+
+  Package({
+    required this.id,
+    required this.type,
+    required this.name,
+    required this.durationDays,
+    required this.price,
+    required this.features,
+    required this.status,
+    this.videoUrl,
+  });
+
+  factory Package.fromJson(Map<String, dynamic> json) {
+    return Package(
+      id: json['_id'] ?? '',
+      type: json['type'] ?? '',
+      name: json['name'] ?? '',
+      durationDays: json['durationDays'] ?? 0,
+      price: (json['price'] ?? 0).toDouble(),
+      features: List<String>.from(json['features'] ?? []),
+      status: json['status'] ?? 'active',
+      videoUrl: json['videoUrl'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'type': type,
+      'name': name,
+      'durationDays': durationDays,
+      'price': price,
+      'features': features,
+      'status': status,
+      'videoUrl': videoUrl,
+    };
+  }
+
+  String get durationText {
+    if (durationDays >= 365) {
+      return '${(durationDays / 365).round()} Year';
+    } else if (durationDays >= 30) {
+      return '${(durationDays / 30).round()} Months';
+    } else {
+      return '$durationDays Days';
+    }
+  }
+}
+
+
+// ─── Promo Code Model ──────────────────────────────────────────────────────────
+class PromoCode {
+  final String code;
+  final String discountType;
+  final double discountValue;
+
+  PromoCode({
+    required this.code,
+    required this.discountType,
+    required this.discountValue,
+  });
+
+  factory PromoCode.fromJson(Map<String, dynamic> json) {
+    return PromoCode(
+      code: json['code'] ?? '',
+      discountType: json['discountType'] ?? 'percentage',
+      discountValue: (json['discountValue'] ?? 0).toDouble(),
+    );
+  }
+
+  double calculateDiscount(double price) {
+    if (discountType == 'percentage') {
+      return (price * discountValue) / 100;
+    } else {
+      return discountValue;
+    }
+  }
+
+  String get discountText {
+    if (discountType == 'percentage') {
+      return '${discountValue.toInt()}% OFF';
+    } else {
+      return '৳${discountValue.toInt()} OFF';
+    }
+  }
+}
+
+
+// ─── Subscription Model ────────────────────────────────────────────────────────
+class Subscription {
+  final String id;
+  final String userId;
+  final String packageName;
+  final String? planId;
+  final DateTime startAt;
+  final DateTime? expireAt;
+  final bool active;
+  final String? paymentMethod;
+  final String? transactionID;
+  final double? amount;
+  final int? duration;
+
+  Subscription({
+    required this.id,
+    required this.userId,
+    required this.packageName,
+    this.planId,
+    required this.startAt,
+    this.expireAt,
+    required this.active,
+    this.paymentMethod,
+    this.transactionID,
+    this.amount,
+    this.duration,
+  });
+
+  factory Subscription.fromJson(Map<String, dynamic> json) {
+    return Subscription(
+      id: json['_id'] ?? '',
+      userId: json['user'] ?? '',
+      packageName: json['packageName'] ?? '',
+      planId: json['planId'],
+      startAt: DateTime.tryParse(json['startAt'] ?? '') ?? DateTime.now(),
+      expireAt: json['expireAt'] != null ? DateTime.tryParse(json['expireAt']) : null,
+      active: json['active'] ?? false,
+      paymentMethod: json['paymentMethod'],
+      transactionID: json['transactionID'],
+      amount: json['amount'] != null ? (json['amount'] as num).toDouble() : null,
+      duration: json['duration'],
+    );
+  }
+
+  bool get isExpired {
+    if (expireAt == null) return true;
+    return DateTime.now().isAfter(expireAt!);
+  }
+
+  int get daysRemaining {
+    if (expireAt == null) return 0;
+    final diff = expireAt!.difference(DateTime.now());
+    return diff.inDays > 0 ? diff.inDays : 0;
+  }
+}
+
+
+// ─── Payment Model ─────────────────────────────────────────────────────────────
+class Payment {
+  final String id;
+  final String userId;
+  final double amount;
+  final String method;
+  final String? transactionId;
+  final String status;
+  final String? promoCode;
+  final double discountAmount;
+  final double finalAmount;
+  final String? packageType;
+  final DateTime createdAt;
+
+  Payment({
+    required this.id,
+    required this.userId,
+    required this.amount,
+    required this.method,
+    this.transactionId,
+    required this.status,
+    this.promoCode,
+    required this.discountAmount,
+    required this.finalAmount,
+    this.packageType,
+    required this.createdAt,
+  });
+
+  factory Payment.fromJson(Map<String, dynamic> json) {
+    return Payment(
+      id: json['_id'] ?? '',
+      userId: json['user'] ?? '',
+      amount: (json['amount'] ?? 0).toDouble(),
+      method: json['method'] ?? '',
+      transactionId: json['transactionId'],
+      status: json['status'] ?? 'pending',
+      promoCode: json['promoCode'],
+      discountAmount: (json['discountAmount'] ?? 0).toDouble(),
+      finalAmount: (json['finalAmount'] ?? 0).toDouble(),
+      packageType: json['packageType'],
+      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+    );
+  }
+
+  String get statusText {
+    switch (status) {
+      case 'completed':
+        return 'Completed';
+      case 'pending':
+        return 'Pending';
+      case 'failed':
+        return 'Failed';
+      default:
+        return status;
+    }
+  }
+
+  Color get statusColor {
+    switch (status) {
+      case 'completed':
+        return const Color(0xFF10B981);
+      case 'pending':
+        return const Color(0xFFF59E0B);
+      case 'failed':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFF6B7280);
+    }
   }
 }

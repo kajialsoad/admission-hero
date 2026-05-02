@@ -1,5 +1,6 @@
 // services/bkashService.ts
 import axios from "axios";
+import PaymentSettings from "../models/PaymentSettings";
 
 interface BKashConfig {
   baseUrl: string;
@@ -16,15 +17,34 @@ class BKashService {
 
   constructor(config?: Partial<BKashConfig>) {
     this.config = {
-      // **IMPORTANT**: prefer v1.2.0-beta in sandbox (matches screenshots). Make configurable via env.
+      // Default fallback values from .env
       baseUrl: process.env.BKASH_BASE_URL || "https://tokenized.sandbox.bka.sh/v1.2.0-beta",
       username: process.env.BKASH_USERNAME || "sandboxTokenizedUser02",
       password: process.env.BKASH_PASSWORD || "sandboxTokenizedUser02@12345",
-      // <-- Make sure these EXACT strings match your dashboard (no typos)
       appKey: process.env.BKASH_APP_KEY || "4f6o0cjiki2rfm34kfdadl1eqq",
       appSecret: process.env.BKASH_APP_SECRET || "2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3fug4b",
       ...config,
     };
+  }
+
+  // Load credentials from database (admin settings)
+  private async loadConfigFromDB(): Promise<BKashConfig> {
+    try {
+      const settings = await PaymentSettings.findOne();
+      if (settings && settings.bkashConfig) {
+        const dbConfig = settings.bkashConfig;
+        return {
+          baseUrl: dbConfig.baseUrl || this.config.baseUrl,
+          username: dbConfig.username || this.config.username,
+          password: dbConfig.password || this.config.password,
+          appKey: dbConfig.appKey || this.config.appKey,
+          appSecret: dbConfig.appSecret || this.config.appSecret,
+        };
+      }
+    } catch (error) {
+      console.error('[bKash] Failed to load config from DB, using defaults:', error);
+    }
+    return this.config;
   }
 
   async getAccessToken(): Promise<string> {
@@ -46,42 +66,42 @@ class BKashService {
   }
 
   private async requestAccessToken(): Promise<string> {
-    const url = `${this.config.baseUrl}/tokenized/checkout/token/grant`;
+    // Load fresh config from database
+    const config = await this.loadConfigFromDB();
+    
+    const url = `${config.baseUrl}/tokenized/checkout/token/grant`;
     try {
       const res = await axios.post(
         url,
         {
-          app_key: this.config.appKey,
-          app_secret: this.config.appSecret,
+          app_key: config.appKey,
+          app_secret: config.appSecret,
         },
         {
           headers: {
-            username: this.config.username,
-            password: this.config.password,
+            username: config.username,
+            password: config.password,
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          timeout: 30000, // 30 seconds
-          validateStatus: () => true, // we'll handle status codes ourselves for better logging
+          timeout: 30000,
+          validateStatus: () => true,
         }
       );
 
-      // DEBUG: always log full response in dev so we can see what's returned
-      console.log("Using appKey:", this.config.appKey);
-      console.log("Using appSecret:", this.config.appSecret);
-      console.log("Using username:", this.config.username);
-      console.log("Using password:", this.config.password);
+      // DEBUG: log credentials being used (only in development)
       if (process.env.NODE_ENV !== "production") {
+        console.log("[bKash] Using credentials from database");
+        console.log("Using appKey:", config.appKey);
+        console.log("Using username:", config.username);
         console.log("[bKash] token grant response status:", res.status);
         console.log("[bKash] token grant response data:", JSON.stringify(res.data, null, 2));
       }
 
-      // Check common token fields in order of likelihood
       const token =
         res.data?.id_token || res.data?.token || res.data?.access_token || res.data?.accessToken;
 
       if (!token) {
-        // Include statusMessage or whole response to help debugging
         const msg =
           res.data?.statusMessage ||
           res.data?.message ||
@@ -90,17 +110,18 @@ class BKashService {
         throw new Error(msg);
       }
 
-      // compute expiry: prefer expires_in from response if present
       const expiresIn = Number(res.data?.expires_in || res.data?.expiresIn || 3600);
-      const safetyMs = 60 * 1000; // 1 minute safety margin
+      const safetyMs = 60 * 1000;
       this.tokenCache = {
         token,
         expiresAt: Date.now() + Math.max(0, expiresIn * 1000 - safetyMs),
       };
 
+      // Update config for subsequent requests
+      this.config = config;
+
       return token;
     } catch (err: any) {
-      // if axios produced response object, prefer that message
       const serverMsg = err?.response?.data || err?.message || err;
       console.error("[bKash] requestAccessToken error:", serverMsg);
       throw new Error(

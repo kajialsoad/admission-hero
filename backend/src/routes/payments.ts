@@ -3,13 +3,15 @@ import express from "express"
 import { 
   createBKashPayment, 
   handleBKashCallback, 
-  verifyBKashPayment 
+  verifyBKashPayment,
+  verifyGooglePlayPurchase
 } from "../controllers/paymentController"
 
 import { protect } from "../middlewares/auth"
 
 const router = express.Router()
 
+// ============ bKash Payment Routes ============
 // Create bKash payment (requires authentication)
 router.post("/bkash/create", protect, createBKashPayment)
 
@@ -19,8 +21,8 @@ router.post("/bkash/verify", protect, verifyBKashPayment)
 // bKash callback (PUBLIC) — DO NOT use protect here
 router.get("/bkash/callback", handleBKashCallback)
 
-// router.get("/bkash/callback", (req, res) => {
-//   return res.status(200).send("Please use POST for bKash callback")
-// })
+// ============ Google Play Billing Routes ============
+// Verify Google Play purchase (requires authentication)
+router.post("/google-play/verify", protect, verifyGooglePlayPurchase)
 
 export default router

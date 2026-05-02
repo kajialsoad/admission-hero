@@ -13,6 +13,9 @@ import {
   Settings,
   Bell,
   LucideFileQuestion,
+  Package,
+  Tag,
+  CreditCard,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
@@ -35,8 +38,12 @@ import { cn } from "@/lib/utils"
 const navigation = [
   { name: "Dashboard Home", href: "/dashboard", icon: LayoutDashboard, badge: null },
   { name: "University Manage", href: "/dashboard/universities", icon: GraduationCap, badge: null },
-  { name: "Question  Manage", href: "/dashboard/questions", icon: LucideFileQuestion, badge: null },
+  { name: "Question Manage", href: "/dashboard/questions", icon: LucideFileQuestion, badge: null },
   { name: "User Manage", href: "/dashboard/users", icon: Users, badge: null },
+  { name: "Packages", href: "/dashboard/packages", icon: Package, badge: null },
+  { name: "Promo Codes", href: "/dashboard/promo-codes", icon: Tag, badge: null },
+  { name: "Payments", href: "/dashboard/payments", icon: CreditCard, badge: null },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings, badge: null },
 ]
 
 export default function Sidebar() {

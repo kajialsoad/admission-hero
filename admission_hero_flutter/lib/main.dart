@@ -16,6 +16,7 @@ import 'providers/auth_provider.dart';
 import 'providers/exam_provider.dart';
 import 'providers/university_provider.dart';
 import 'providers/firebase_provider.dart';
+import 'providers/subscription_provider.dart';
 
 // Screens
 import 'screens/auth/auth_screen.dart';
@@ -33,7 +34,7 @@ import 'screens/profile/edit_profile_screen.dart';
 import 'screens/profile/support_screen.dart';
 import 'screens/profile/performance_screen.dart';
 import 'screens/search/search_screen.dart';
-import 'screens/subscription/subscription_screen.dart';
+import 'screens/subscription/new_subscription_screen.dart';
 import 'screens/subscription/subscription_details_screen.dart';
 import 'screens/exam/practice_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
@@ -84,6 +85,7 @@ class AdmissionHeroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UniversityProvider()),
         ChangeNotifierProvider(create: (_) => ExamProvider()),
         ChangeNotifierProvider(create: (_) => ThemeService()),
+        ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
 
         // Firebase provider — initialized after Firebase.initializeApp()
         ChangeNotifierProvider(
@@ -131,7 +133,7 @@ class AdmissionHeroApp extends StatelessWidget {
       case '/search':
         return MaterialPageRoute(builder: (_) => const SearchScreen());
       case '/subscription':
-        return MaterialPageRoute(builder: (_) => const SubscriptionScreen());
+        return MaterialPageRoute(builder: (_) => const NewSubscriptionScreen());
       case '/profile':
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
       case '/edit-profile':

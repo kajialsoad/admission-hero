@@ -22,7 +22,6 @@ import toast from "react-hot-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const UNITS = ["A", "B", "C", "D"]
-const SESSIONS = ["2024", "2023", "2022", "2021", "2020"]
 
 interface BulkQuestionSetUploadProps {
   isOpen: boolean
@@ -234,18 +233,11 @@ export function BulkQuestionSetUpload({ isOpen, onClose }: BulkQuestionSetUpload
               </div>
               <div>
                 <Label htmlFor="session">Session *</Label>
-                <Select value={selectedSession} onValueChange={setSelectedSession}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SESSIONS.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input 
+                  value={selectedSession} 
+                  onChange={(e) => setSelectedSession(e.target.value)} 
+                  placeholder="e.g., 2020-2021"
+                />
               </div>
             </div>
 

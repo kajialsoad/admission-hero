@@ -173,6 +173,9 @@ update-railway-url.sh
 **/flutter_input.txt
 analyze_output.txt
 
+# Graphify output
+graphify-out/
+
 # Package Lock Files (optional - uncomment if needed)
 # package-lock.json
 # **/package-lock.json

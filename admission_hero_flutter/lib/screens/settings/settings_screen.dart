@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/theme_service.dart';
 import '../../services/offline_service.dart';
 import '../../theme/app_theme.dart';
@@ -15,17 +17,44 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final OfflineService _offlineService = OfflineService();
   Map<String, dynamic> _storageUsage = {};
+  bool _pushNotificationsEnabled = true;
+  bool _examRemindersEnabled = true;
 
   @override
   void initState() {
     super.initState();
     _loadStorageUsage();
+    _loadNotificationSettings();
   }
 
   Future<void> _loadStorageUsage() async {
     final usage = await _offlineService.getStorageUsage();
     setState(() {
       _storageUsage = usage;
+    });
+  }
+
+  Future<void> _loadNotificationSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _pushNotificationsEnabled = prefs.getBool('push_notifications') ?? true;
+      _examRemindersEnabled = prefs.getBool('exam_reminders') ?? true;
+    });
+  }
+
+  Future<void> _savePushNotificationSetting(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('push_notifications', value);
+    setState(() {
+      _pushNotificationsEnabled = value;
+    });
+  }
+
+  Future<void> _saveExamReminderSetting(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('exam_reminders', value);
+    setState(() {
+      _examRemindersEnabled = value;
     });
   }
 
@@ -188,14 +217,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           title: const Text('Push Notifications'),
           subtitle: const Text('Receive exam reminders and updates'),
-          value: true, // TODO: Connect to actual setting
-          onChanged: (value) {
-            // TODO: Implement notification toggle
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Notification settings updated'),
-              ),
-            );
+          value: _pushNotificationsEnabled,
+          onChanged: (value) async {
+            await _savePushNotificationSetting(value);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    value 
+                      ? 'Push notifications enabled' 
+                      : 'Push notifications disabled',
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
           },
         ),
         const Divider(height: 1),
@@ -206,9 +242,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           title: const Text('Exam Reminders'),
           subtitle: const Text('Get notified before exam time'),
-          value: true, // TODO: Connect to actual setting
-          onChanged: (value) {
-            // TODO: Implement reminder toggle
+          value: _examRemindersEnabled,
+          onChanged: (value) async {
+            await _saveExamReminderSetting(value);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    value 
+                      ? 'Exam reminders enabled' 
+                      : 'Exam reminders disabled',
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
           },
         ),
       ],
@@ -225,13 +273,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           title: const Text('Privacy Policy'),
           trailing: const Icon(Icons.open_in_new),
-          onTap: () {
-            // TODO: Open privacy policy
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Privacy policy will open in browser'),
-              ),
-            );
+          onTap: () async {
+            final url = Uri.parse('https://admissionhero.com/privacy-policy');
+            try {
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Could not open Privacy Policy'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: ${e.toString()}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
         ),
         const Divider(height: 1),
@@ -242,13 +308,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           title: const Text('Terms of Service'),
           trailing: const Icon(Icons.open_in_new),
-          onTap: () {
-            // TODO: Open terms of service
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Terms of service will open in browser'),
-              ),
-            );
+          onTap: () async {
+            final url = Uri.parse('https://admissionhero.com/terms-of-service');
+            try {
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Could not open Terms of Service'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: ${e.toString()}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
         ),
         const Divider(height: 1),
@@ -290,13 +374,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: const Text('Rate App'),
           subtitle: const Text('Help us improve by rating the app'),
           trailing: const Icon(Icons.open_in_new),
-          onTap: () {
-            // TODO: Open app store rating
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Thank you for your feedback!'),
-              ),
-            );
+          onTap: () async {
+            // Android Play Store URL
+            final androidUrl = Uri.parse('https://play.google.com/store/apps/details?id=com.admissionhero.app');
+            // iOS App Store URL
+            final iosUrl = Uri.parse('https://apps.apple.com/app/id123456789');
+            
+            try {
+              // Try Android first (you can add platform detection if needed)
+              if (await canLaunchUrl(androidUrl)) {
+                await launchUrl(androidUrl, mode: LaunchMode.externalApplication);
+              } else if (await canLaunchUrl(iosUrl)) {
+                await launchUrl(iosUrl, mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Could not open app store'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Thank you for your feedback!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            }
           },
         ),
         const Divider(height: 1),

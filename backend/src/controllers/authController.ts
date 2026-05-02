@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import User from '../models/User';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { Resend } from 'resend';
+import { sendOtpEmail } from '../services/emailService';
 
 function signToken(id: string) {
   const secret: any = process.env.JWT_SECRET || 'secret';
@@ -10,8 +10,7 @@ function signToken(id: string) {
   return jwt.sign({ id }, secret, { expiresIn });
 }
 
-// Resend API - works perfectly on Railway
-const resend = new Resend(process.env.RESEND_API_KEY || 're_FMJuYZSj_2tLf4Jy7HvedQQ1e4ewL7RUP');
+// Email service handles Gmail SMTP (primary) + Resend (fallback)
 
 export const register = async (req: Request, res: Response) => {
   const { name, phone, password } = req.body;
@@ -84,28 +83,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
       resetOtpExpiry: otpExpiry,
     });
 
-    // Send email via Resend API (works on Railway)
-    const { error: emailError } = await resend.emails.send({
-      from: 'Admission Hero <onboarding@resend.dev>',
-      to: [email],
-      subject: 'পাসওয়ার্ড রিসেট OTP - Admission Hero',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px;">
-          <h2 style="color: #4F46E5; text-align: center;">Admission Hero</h2>
-          <p style="font-size: 16px;">আপনার পাসওয়ার্ড রিসেট করতে নিচের <strong>OTP</strong> ব্যবহার করুন:</p>
-          <div style="background: #f0f0ff; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
-            <h1 style="color: #4F46E5; letter-spacing: 8px; font-size: 36px; margin: 0;">${otp}</h1>
-          </div>
-          <p style="color: #666; font-size: 14px;">এই OTP <strong>15 মিনিট</strong> পর্যন্ত valid থাকবে।</p>
-          <p style="color: #999; font-size: 12px;">আপনি যদি পাসওয়ার্ড রিসেটের অনুরোধ না করে থাকেন, এই ইমেইল উপেক্ষা করুন।</p>
-        </div>
-      `,
-    });
-
-    if (emailError) {
-      console.error('Resend email error:', emailError);
-      throw new Error(emailError.message);
-    }
+    // Send OTP email — Gmail SMTP (primary) + Resend (fallback)
+    await sendOtpEmail(email.trim().toLowerCase(), otp);
 
     return res.json({ success: true, message: 'OTP sent to your email' });
   } catch (error: any) {
@@ -190,13 +169,13 @@ export const getProfile = async (req: Request, res: Response) => {
   try {
     // @ts-ignore - user is added by auth middleware
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const user = await User.findById(userId).select('-password');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -205,5 +184,36 @@ export const getProfile = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("GET PROFILE ERROR:", error);
     return res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+export const updateFcmToken = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore - user is added by auth middleware
+    const userId = req.user?.id;
+    const { fcmToken } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!fcmToken) {
+      return res.status(400).json({ error: 'FCM token is required' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { fcmToken },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.json({ success: true, message: 'FCM token updated successfully' });
+  } catch (error) {
+    console.error("UPDATE FCM TOKEN ERROR:", error);
+    return res.status(500).json({ error: "Failed to update FCM token" });
   }
 };

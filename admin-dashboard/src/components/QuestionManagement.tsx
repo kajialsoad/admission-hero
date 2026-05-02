@@ -27,7 +27,6 @@ import {
 import { useGetUniversitiesQuery } from "../store/api/universitiesApi"
 import toast from "react-hot-toast"
 
-const SESSIONS = ["2024", "2023", "2022", "2021", "2020"]
 const UNITS = ["A", "B", "C", "D"]
 
 interface MCQQuestion {
@@ -189,19 +188,13 @@ export default function QuestionSetManagement() {
                 </Select>
               </div>
 
-              <div className="w-[150px]">
-                <Select value={selectedSession} onValueChange={setSelectedSession}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by session" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SESSIONS.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="w-[180px]">
+                <Input 
+                  value={selectedSession} 
+                  onChange={(e) => setSelectedSession(e.target.value)} 
+                  placeholder="e.g., 2020-2021"
+                  className="h-10"
+                />
               </div>
               
               {(selectedUniversity || selectedUnit || selectedSession) && (
@@ -475,14 +468,11 @@ function ManualCreateDialog({ isOpen, onClose, universities }: any) {
             </div>
             <div>
               <Label>Session *</Label>
-              <Select value={selectedSession} onValueChange={setSelectedSession}>
-                <SelectTrigger><SelectValue placeholder="Select session" /></SelectTrigger>
-                <SelectContent>
-                  {SESSIONS.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input 
+                value={selectedSession} 
+                onChange={(e) => setSelectedSession(e.target.value)} 
+                placeholder="e.g., 2020-2021"
+              />
             </div>
             <div>
               <Label>Description</Label>
@@ -835,14 +825,11 @@ function CSVUploadDialog({ isOpen, onClose, universities }: any) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Session *</Label>
-              <Select value={selectedSession} onValueChange={setSelectedSession}>
-                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>
-                  {SESSIONS.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input 
+                value={selectedSession} 
+                onChange={(e) => setSelectedSession(e.target.value)} 
+                placeholder="e.g., 2020-2021"
+              />
             </div>
             <div>
               <Label>Video URL (Optional)</Label>

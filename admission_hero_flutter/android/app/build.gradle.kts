@@ -48,3 +48,8 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Google Play Billing Library
+    implementation("com.android.billingclient:billing:6.0.1")
+}

@@ -169,83 +169,174 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
 
   Widget _buildSetCard(QuestionSet set, int index) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(16),
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6)],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => Navigator.pushNamed(context, '/questions-view', arguments: set),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(children: [
-              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: AppColors.primaryBg, borderRadius: BorderRadius.circular(20)),
-                        child: Text('Set #$index',
-                            style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w700)),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: AppColors.successLight, borderRadius: BorderRadius.circular(20)),
-                        child: Text('${set.totalQuestions} MCQs',
-                            style: const TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w700)),
-                      ),
-                    ]),
-                    const SizedBox(height: 6),
-                    Text(set.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                    if (set.description != null)
-                      Text(set.description!, maxLines: 2, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12, color: AppColors.textMuted, height: 1.4)),
-                  ]),
-                ),
-                const SizedBox(width: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
                 Container(
-                  width: 38, height: 38,
-                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBg, 
+                    borderRadius: BorderRadius.circular(20)
+                  ),
+                  child: Text(
+                    'Set #$index',
+                    style: const TextStyle(
+                      fontSize: 11, 
+                      color: AppColors.primary, 
+                      fontWeight: FontWeight.w700
+                    )
+                  ),
                 ),
-              ]),
-
-              const SizedBox(height: 10),
-              const Divider(height: 1, color: AppColors.border),
-              const SizedBox(height: 10),
-
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Row(children: [
-                  const Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.textMuted),
-                  const SizedBox(width: 4),
-                  Text('${set.createdAt.day}/${set.createdAt.month}/${set.createdAt.year}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
-                ]),
-                if (set.videoUrl != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: AppColors.errorLight, borderRadius: BorderRadius.circular(20)),
-                    child: const Row(children: [
-                      Icon(Icons.play_circle, color: AppColors.error, size: 14),
-                      SizedBox(width: 4),
-                      Text('Video', style: TextStyle(fontSize: 11, color: AppColors.error, fontWeight: FontWeight.w700)),
-                    ]),
-                  )
-                else
-                  Row(children: const [
-                    Icon(Icons.description_outlined, size: 13, color: AppColors.textMuted),
-                    SizedBox(width: 4),
-                    Text('Practice Set', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
-                  ]),
-              ]),
-            ]),
-          ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.successLight, 
+                    borderRadius: BorderRadius.circular(20)
+                  ),
+                  child: Text(
+                    '${set.totalQuestions} MCQs',
+                    style: const TextStyle(
+                      fontSize: 11, 
+                      color: AppColors.success, 
+                      fontWeight: FontWeight.w700
+                    )
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 10),
+            
+            // Title & Description
+            Text(
+              set.name, 
+              style: const TextStyle(
+                fontSize: 16, 
+                fontWeight: FontWeight.w700, 
+                color: AppColors.textPrimary
+              )
+            ),
+            
+            if (set.description != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                set.description!, 
+                maxLines: 2, 
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13, 
+                  color: AppColors.textMuted, 
+                  height: 1.4
+                )
+              ),
+            ],
+            
+            const SizedBox(height: 12),
+            const Divider(height: 1, color: AppColors.border),
+            const SizedBox(height: 12),
+            
+            // 3 Action Buttons
+            Row(
+              children: [
+                // 1. Start Exam
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, '/exam', arguments: set.id),
+                    icon: const Icon(Icons.play_circle_outline, size: 18),
+                    label: const Text('Start Exam', style: TextStyle(fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // 2. Questions with Answers
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, '/questions-view', arguments: set),
+                    icon: const Icon(Icons.description_outlined, size: 18),
+                    label: const Text('Answers', style: TextStyle(fontSize: 13)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // 3. Video Solve
+                Container(
+                  decoration: BoxDecoration(
+                    color: set.videoUrl != null ? AppColors.errorLight : AppColors.borderLight,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: set.videoUrl != null ? AppColors.error : AppColors.border
+                    ),
+                  ),
+                  child: IconButton(
+                    onPressed: set.videoUrl != null 
+                      ? () {
+                          Navigator.pushNamed(
+                            context, 
+                            '/video-player',
+                            arguments: {
+                              'videoUrl': set.videoUrl!,
+                              'title': set.name,
+                              'description': set.description,
+                            },
+                          );
+                        }
+                      : null,
+                    icon: Icon(
+                      Icons.play_circle_filled,
+                      color: set.videoUrl != null ? AppColors.error : AppColors.textMuted,
+                      size: 24,
+                    ),
+                    tooltip: set.videoUrl != null ? 'Watch Video' : 'No video available',
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 10),
+            
+            // Date
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.textMuted),
+                const SizedBox(width: 4),
+                Text(
+                  '${set.createdAt.day}/${set.createdAt.month}/${set.createdAt.year}',
+                  style: const TextStyle(fontSize: 12, color: AppColors.textMuted)
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
