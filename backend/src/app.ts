@@ -15,6 +15,7 @@ import chatRoutes from './routes/chat';
 import notificationRoutes from './routes/notifications';
 import uploadRoutes from './routes/uploads';
 import analyticsRoutes from './routes/analytics';
+import settingsRoutes from './routes/settings';
 import errorHandler from './middlewares/errorHandler';
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/', (_req, res) => res.send({ok:true, message: 'Admission Hero backend'}));
 

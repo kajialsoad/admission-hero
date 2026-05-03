@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
 import '../chat/chat_screen.dart';
+import '../../models/contact_info.dart';
+import '../../services/settings_service.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -13,6 +15,8 @@ class SupportScreen extends StatefulWidget {
 
 class _SupportScreenState extends State<SupportScreen> {
   int? _expandedFaq;
+  ContactInfo? _contactInfo;
+  bool _isLoadingContact = true;
 
   static const _faqs = [
     {'q': 'How do I used this app?', 'a': 'This app addmission hero, this help addmission question bank solve and better result in university exam.'},
@@ -20,6 +24,27 @@ class _SupportScreenState extends State<SupportScreen> {
     {'q': 'How are exams scored?', 'a': 'Exams are automatically scored based on correct and incorrect answers. You get detailed feedback immediately after submission.'},
     {'q': 'Can I retake exams?', 'a': 'You can retake exams in Study and Practice modes unlimited times. Exam mode attempts are tracked for your record.'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContactInfo();
+  }
+
+  Future<void> _loadContactInfo() async {
+    try {
+      final contactInfo = await SettingsService.getContactInfo();
+      setState(() {
+        _contactInfo = contactInfo;
+        _isLoadingContact = false;
+      });
+    } catch (e) {
+      setState(() {
+        _contactInfo = ContactInfo.defaultInfo;
+        _isLoadingContact = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,17 +77,19 @@ class _SupportScreenState extends State<SupportScreen> {
                     })),
                     const SizedBox(width: 12),
                     Expanded(child: _contactCard(Icons.email_outlined, 'Email', 'Get help via email', () {
-                      // TODO: Open email app
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Email: support@admission-hero.com')),
-                      );
+                      if (_contactInfo != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Email: ${_contactInfo!.email}')),
+                        );
+                      }
                     })),
                     const SizedBox(width: 12),
                     Expanded(child: _contactCard(Icons.phone_outlined, 'Call Us', 'Talk to our team', () {
-                      // TODO: Make phone call
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Call: +880 1234 567890')),
-                      );
+                      if (_contactInfo != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Call: ${_contactInfo!.phone}')),
+                        );
+                      }
                     })),
                   ]),
 
@@ -102,23 +129,25 @@ class _SupportScreenState extends State<SupportScreen> {
                   ),
 
                   const SizedBox(height: 30),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF2563eb)]),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('Contact Information', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 16),
-                      _infoRow(Icons.email, 'support@admission-hero.com'),
-                      const SizedBox(height: 12),
-                      _infoRow(Icons.phone, '+880 1234 567890'),
-                      const SizedBox(height: 12),
-                      _infoRow(Icons.access_time, 'Mon-Sat, 9 AM - 6 PM'),
-                    ]),
-                  ),
+                  _isLoadingContact
+                      ? const Center(child: CircularProgressIndicator())
+                      : Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF2563eb)]),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const Text('Contact Information', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 16),
+                            _infoRow(Icons.email, _contactInfo?.email ?? 'Loading...'),
+                            const SizedBox(height: 12),
+                            _infoRow(Icons.phone, _contactInfo?.phone ?? 'Loading...'),
+                            const SizedBox(height: 12),
+                            _infoRow(Icons.access_time, _contactInfo?.workingHours ?? 'Loading...'),
+                          ]),
+                        ),
                   const SizedBox(height: 30),
                 ]),
               ),

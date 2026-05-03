@@ -28,6 +28,12 @@ interface PaymentSettings {
   }
 }
 
+interface ContactInfo {
+  email: string
+  phone: string
+  workingHours: string
+}
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<PaymentSettings>({
     bkashEnabled: true,
@@ -55,8 +61,17 @@ export default function SettingsPage() {
   const [showGoogleServiceKey, setShowGoogleServiceKey] = useState(false)
   const { token } = useAppSelector((state) => state.auth)
 
+  // Contact Information State
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    email: 'support@admission-hero.com',
+    phone: '+880 1234 567890',
+    workingHours: 'Mon-Sat, 9 AM - 6 PM'
+  })
+  const [savingContact, setSavingContact] = useState(false)
+
   useEffect(() => {
     fetchSettings()
+    fetchContactInfo()
   }, [])
 
   const fetchSettings = async () => {
@@ -77,6 +92,49 @@ export default function SettingsPage() {
       toast.error('Failed to load settings')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchContactInfo = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/contact-info`)
+      const data = await response.json()
+      if (data.success && data.data) {
+        setContactInfo(data.data)
+      }
+    } catch (error) {
+      console.error('Error fetching contact info:', error)
+    }
+  }
+
+  const handleSaveContact = async () => {
+    setSavingContact(true)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          key: 'contact_info',
+          value: contactInfo,
+          category: 'public'
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success('Contact information updated successfully!')
+      } else {
+        toast.error(data.message || 'Failed to update contact information')
+      }
+    } catch (error) {
+      console.error('Error saving contact info:', error)
+      toast.error('Failed to save contact information')
+    } finally {
+      setSavingContact(false)
     }
   }
 
@@ -125,6 +183,73 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
+        {/* Contact Information Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <SettingsIcon className="h-5 w-5 text-purple-600" />
+              Contact Information
+            </CardTitle>
+            <CardDescription>
+              Update contact details shown in the mobile app Help & Support section
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="contact-email">Support Email</Label>
+              <Input
+                id="contact-email"
+                type="email"
+                value={contactInfo.email}
+                onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
+                placeholder="support@admission-hero.com"
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="contact-phone">Support Phone</Label>
+              <Input
+                id="contact-phone"
+                type="tel"
+                value={contactInfo.phone}
+                onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
+                placeholder="+880 1234 567890"
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="contact-hours">Working Hours</Label>
+              <Input
+                id="contact-hours"
+                type="text"
+                value={contactInfo.workingHours}
+                onChange={(e) => setContactInfo({ ...contactInfo, workingHours: e.target.value })}
+                placeholder="Mon-Sat, 9 AM - 6 PM"
+                className="mt-1"
+              />
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={handleSaveContact}
+                disabled={savingContact}
+                className="min-w-[120px]"
+              >
+                {savingContact ? 'Saving...' : 'Save Contact Info'}
+              </Button>
+            </div>
+
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> These details will be displayed in the mobile app's Help & Support page. 
+                Make sure they are accurate and monitored regularly.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* bKash Settings */}
         <Card>
           <CardHeader>

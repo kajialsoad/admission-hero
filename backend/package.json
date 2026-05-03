@@ -8,7 +8,8 @@
     "build": "tsc -p .",
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts",
-    "create-admin": "ts-node src/scripts/createAdmin.ts"
+    "create-admin": "ts-node src/scripts/createAdmin.ts",
+    "init-contact-info": "ts-node src/scripts/initContactInfo.ts"
   },
   "keywords": [],
   "author": "",
