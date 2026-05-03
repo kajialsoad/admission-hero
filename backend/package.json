@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts",
     "create-admin": "ts-node src/scripts/createAdmin.ts",
-    "init-contact-info": "ts-node src/scripts/initContactInfo.ts"
+    "init-contact-info": "ts-node src/scripts/initContactInfo.ts",
+    "init-app-content": "ts-node src/scripts/initAppContent.ts"
   },
   "keywords": [],
   "author": "",
