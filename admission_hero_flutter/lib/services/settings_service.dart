@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/contact_info.dart';
-import '../config/api_config.dart';
+import '../utils/constants.dart';
 
 class SettingsService {
   static Future<ContactInfo> getContactInfo() async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/settings/contact-info'),
+        Uri.parse('${AppConstants.baseUrl}/settings/contact-info'),
       );
 
       if (response.statusCode == 200) {

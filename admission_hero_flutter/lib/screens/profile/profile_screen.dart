@@ -17,7 +17,7 @@ class ProfileScreen extends StatelessWidget {
       _MenuItem(id: 'edit-profile', title: 'Edit Profile', icon: Icons.edit_outlined,
           onTap: () => Navigator.pushNamed(context, '/edit-profile')),
       _MenuItem(id: 'subscription', title: 'My Subscription', icon: Icons.card_membership_outlined,
-          onTap: () => Navigator.pushNamed(context, '/subscription-details')),
+          onTap: () => Navigator.pushNamed(context, '/subscription')),
       _MenuItem(id: 'performance', title: 'My Performance', icon: Icons.insights_outlined,
           onTap: () => Navigator.pushNamed(context, '/performance')),
       _MenuItem(id: 'support', title: 'Help & Support', icon: Icons.help_outline_rounded,

@@ -35,7 +35,6 @@ import 'screens/profile/support_screen.dart';
 import 'screens/profile/performance_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/subscription/new_subscription_screen.dart';
-import 'screens/subscription/subscription_details_screen.dart';
 import 'screens/exam/practice_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
 import 'screens/chat/chat_screen.dart';
@@ -177,8 +176,6 @@ class AdmissionHeroApp extends StatelessWidget {
         return MaterialPageRoute(builder: (_) => const FeaturedExamsScreen());
       case '/performance':
         return MaterialPageRoute(builder: (_) => const PerformanceScreen());
-      case '/subscription-details':
-        return MaterialPageRoute(builder: (_) => const SubscriptionDetailsScreen());
       case '/settings':
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case '/offline-exams':
