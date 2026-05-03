@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../services/theme_service.dart';
 import '../../services/offline_service.dart';
-import '../../theme/app_theme.dart';
-import '../../utils/constants.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -272,32 +269,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: Theme.of(context).colorScheme.primary,
           ),
           title: const Text('Privacy Policy'),
-          trailing: const Icon(Icons.open_in_new),
-          onTap: () async {
-            final url = Uri.parse('https://admissionhero.com/privacy-policy');
-            try {
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              } else {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Could not open Privacy Policy'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error: ${e.toString()}'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            }
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.pushNamed(context, '/app-content', arguments: 'privacy_policy');
           },
         ),
         const Divider(height: 1),
@@ -306,33 +280,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Icons.description,
             color: Theme.of(context).colorScheme.primary,
           ),
-          title: const Text('Terms of Service'),
-          trailing: const Icon(Icons.open_in_new),
-          onTap: () async {
-            final url = Uri.parse('https://admissionhero.com/terms-of-service');
-            try {
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              } else {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Could not open Terms of Service'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error: ${e.toString()}'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            }
+          title: const Text('Terms & Conditions'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.pushNamed(context, '/app-content', arguments: 'terms_conditions');
+          },
+        ),
+        const Divider(height: 1),
+        ListTile(
+          leading: Icon(
+            Icons.assignment_return,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: const Text('Refund Policy'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.pushNamed(context, '/app-content', arguments: 'refund_policy');
           },
         ),
         const Divider(height: 1),
@@ -362,64 +325,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Icons.info,
             color: Theme.of(context).colorScheme.primary,
           ),
-          title: const Text('App Version'),
-          subtitle: const Text('1.0.0+1'),
-        ),
-        const Divider(height: 1),
-        ListTile(
-          leading: Icon(
-            Icons.star,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          title: const Text('Rate App'),
-          subtitle: const Text('Help us improve by rating the app'),
-          trailing: const Icon(Icons.open_in_new),
-          onTap: () async {
-            // Android Play Store URL
-            final androidUrl = Uri.parse('https://play.google.com/store/apps/details?id=com.admissionhero.app');
-            // iOS App Store URL
-            final iosUrl = Uri.parse('https://apps.apple.com/app/id123456789');
-            
-            try {
-              // Try Android first (you can add platform detection if needed)
-              if (await canLaunchUrl(androidUrl)) {
-                await launchUrl(androidUrl, mode: LaunchMode.externalApplication);
-              } else if (await canLaunchUrl(iosUrl)) {
-                await launchUrl(iosUrl, mode: LaunchMode.externalApplication);
-              } else {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Could not open app store'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Thank you for your feedback!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              }
-            }
-          },
-        ),
-        const Divider(height: 1),
-        ListTile(
-          leading: Icon(
-            Icons.bug_report,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          title: const Text('Report Bug'),
-          subtitle: const Text('Found an issue? Let us know'),
+          title: const Text('About App'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            Navigator.pushNamed(context, '/chat');
+            Navigator.pushNamed(context, '/app-content', arguments: 'about_app');
           },
+        ),
+        const Divider(height: 1),
+        ListTile(
+          leading: Icon(
+            Icons.contact_support,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: const Text('Contact Us'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.pushNamed(context, '/app-content', arguments: 'contact_us');
+          },
+        ),
+        const Divider(height: 1),
+        ListTile(
+          leading: Icon(
+            Icons.help,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: const Text('Support'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.pushNamed(context, '/support');
+          },
+        ),
+        const Divider(height: 1),
+        ListTile(
+          leading: Icon(
+            Icons.info_outline,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: const Text('App Version'),
+          subtitle: const Text('1.0.0+1'),
         ),
       ],
     );

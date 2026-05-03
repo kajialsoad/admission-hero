@@ -42,6 +42,7 @@ import 'screens/offline/offline_exams_screen.dart';
 import 'screens/video/video_player_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/test/feature_test_screen.dart';
+import 'screens/content/app_content_screen.dart';
 
 // Models
 import 'models/models.dart';
@@ -178,6 +179,11 @@ class AdmissionHeroApp extends StatelessWidget {
         return MaterialPageRoute(builder: (_) => const PerformanceScreen());
       case '/settings':
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case '/app-content':
+        final contentKey = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => AppContentScreen(contentKey: contentKey),
+        );
       case '/offline-exams':
         return MaterialPageRoute(builder: (_) => const OfflineExamsScreen());
       case '/video-player':
