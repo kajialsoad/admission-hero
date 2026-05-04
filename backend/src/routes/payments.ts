@@ -28,6 +28,7 @@ router.post("/google-play/verify", protect, verifyGooglePlayPurchase)
 
 // ============ Admin/Migration Routes ============
 // Fix paid users without expiry date (PUBLIC for now - should be admin only in production)
+router.get("/fix-paid-users-expiry", fixPaidUsersExpiry)
 router.post("/fix-paid-users-expiry", fixPaidUsersExpiry)
 
 export default router
