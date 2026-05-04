@@ -4,6 +4,66 @@ import QuestionSet from "../models/QuestionSet"
 import University from "../models/University"
 import mongoose from "mongoose"
 
+// Get available sessions for a university and unit
+export const getAvailableSessions = async (req: Request, res: Response) => {
+  try {
+    const { universityId, unit } = req.query
+
+    if (!universityId || !unit) {
+      return res.status(400).json({
+        success: false,
+        message: "universityId and unit are required",
+      })
+    }
+
+    // Get distinct sessions with question set counts
+    const sessions = await QuestionSet.aggregate([
+      {
+        $match: {
+          university: new mongoose.Types.ObjectId(universityId as string),
+          unit: unit as string,
+        },
+      },
+      {
+        $group: {
+          _id: "$session",
+          totalSets: { $sum: 1 },
+          freeSets: {
+            $sum: { $cond: [{ $eq: ["$accessType", "free"] }, 1, 0] },
+          },
+          paidSets: {
+            $sum: { $cond: [{ $eq: ["$accessType", "paid"] }, 1, 0] },
+          },
+        },
+      },
+      {
+        $project: {
+          session: "$_id",
+          totalSets: 1,
+          freeSets: 1,
+          paidSets: 1,
+          _id: 0,
+        },
+      },
+      {
+        $sort: { session: -1 }, // Sort by session descending (newest first)
+      },
+    ])
+
+    res.json({
+      success: true,
+      data: sessions,
+      message: "Available sessions retrieved successfully",
+    })
+  } catch (error: any) {
+    console.error("Get available sessions error:", error)
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to retrieve available sessions",
+    })
+  }
+}
+
 // Get all question sets with filtering
 export const getQuestionSets = async (req: Request, res: Response) => {
   try {
@@ -51,7 +111,7 @@ export const createQuestionSet = async (req: Request, res: Response) => {
   session.startTransaction()
 
   try {
-    const { name, university, unit, session: examSession, videoUrl, description, questions } = req.body
+    const { name, university, unit, session: examSession, videoUrl, description, accessType, questions } = req.body
 
     // Validation
     if (!name || !university || !unit || !examSession) {
@@ -112,6 +172,7 @@ export const createQuestionSet = async (req: Request, res: Response) => {
           totalQuestions: questions.length,
           videoUrl: videoUrl?.trim() || undefined,
           description: description?.trim() || undefined,
+          accessType: accessType || 'paid', // Add accessType with default 'paid'
         },
       ],
       { session }
@@ -160,12 +221,13 @@ export const createQuestionSet = async (req: Request, res: Response) => {
 // Update question set (only name, video, description)
 export const updateQuestionSet = async (req: Request, res: Response) => {
   try {
-    const { name, videoUrl, description } = req.body
+    const { name, videoUrl, description, accessType } = req.body
 
     const updateData: any = {}
     if (name !== undefined) updateData.name = name.trim()
     if (videoUrl !== undefined) updateData.videoUrl = videoUrl?.trim() || undefined
     if (description !== undefined) updateData.description = description?.trim() || undefined
+    if (accessType !== undefined) updateData.accessType = accessType // Add accessType support
 
     const set = await QuestionSet.findByIdAndUpdate(req.params.id, updateData, {
       new: true,

@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { Plus, MoreVertical, Trash2, BookOpen, Upload, X, Eye } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Plus, MoreVertical, Trash2, BookOpen, Upload, X, Eye, Edit } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   useGetQuestionSetsQuery,
   useCreateQuestionSetMutation,
+  useUpdateQuestionSetMutation,
   useDeleteQuestionSetMutation,
   useGetQuestionsBySetIdQuery,
   type QuestionSet,
@@ -46,6 +47,7 @@ export default function QuestionSetManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false)
   const [isViewQuestionsOpen, setIsViewQuestionsOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedQuestionSet, setSelectedQuestionSet] = useState<QuestionSet | null>(null)
   const [selectedUniversity, setSelectedUniversity] = useState<string>("")
   const [selectedUnit, setSelectedUnit] = useState<string>("")
@@ -213,6 +215,7 @@ export default function QuestionSetManagement() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Set Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">University</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit/Session</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Access Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Questions</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Video</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -221,11 +224,11 @@ export default function QuestionSetManagement() {
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">Loading...</td>
+                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">Loading...</td>
                 </tr>
               ) : questionSets.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">No question sets found</td>
+                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">No question sets found</td>
                 </tr>
               ) : (
                 questionSets.map((set) => (
@@ -241,6 +244,17 @@ export default function QuestionSetManagement() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-600">Unit {set.unit} / {set.session}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {set.accessType === 'free' ? (
+                        <div className="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-green-100 text-green-700">
+                          ✅ Free
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-orange-100 text-orange-700">
+                          🔒 Paid
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-blue-100 text-blue-700">
@@ -267,6 +281,10 @@ export default function QuestionSetManagement() {
                           <DropdownMenuItem onClick={() => { setSelectedQuestionSet(set); setIsViewQuestionsOpen(true); }}>
                             <Eye className="h-4 w-4 mr-2" />
                             View Questions
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setSelectedQuestionSet(set); setIsEditDialogOpen(true); }}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Access Type
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => { setSelectedQuestionSet(set); setIsDeleteDialogOpen(true); }} className="text-red-600">
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -298,6 +316,7 @@ export default function QuestionSetManagement() {
       <ManualCreateDialog isOpen={isCreateDialogOpen} onClose={() => setIsCreateDialogOpen(false)} universities={universities} />
       <ViewQuestionsDialog isOpen={isViewQuestionsOpen} onClose={() => { setIsViewQuestionsOpen(false); setSelectedQuestionSet(null); }} questionSet={selectedQuestionSet} />
       <CSVUploadDialog isOpen={isBulkUploadOpen} onClose={() => setIsBulkUploadOpen(false)} universities={universities} />
+      <EditAccessTypeDialog isOpen={isEditDialogOpen} onClose={() => { setIsEditDialogOpen(false); setSelectedQuestionSet(null); }} questionSet={selectedQuestionSet} />
 
       {/* Delete Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -326,6 +345,7 @@ function ManualCreateDialog({ isOpen, onClose, universities }: any) {
   const [selectedUniversity, setSelectedUniversity] = useState("")
   const [selectedUnit, setSelectedUnit] = useState("")
   const [selectedSession, setSelectedSession] = useState("")
+  const [accessType, setAccessType] = useState<"free" | "paid">("paid") // New field
   const [questions, setQuestions] = useState<MCQQuestion[]>([])
   const [currentQuestion, setCurrentQuestion] = useState<MCQQuestion>({
     questionNumber: 1,
@@ -347,6 +367,7 @@ function ManualCreateDialog({ isOpen, onClose, universities }: any) {
     setSelectedUniversity("")
     setSelectedUnit("")
     setSelectedSession("")
+    setAccessType("paid")
     setQuestions([])
     setCurrentQuestion({ questionNumber: 1, text: "", optionA: "", optionB: "", optionC: "", optionD: "", correctAnswer: "A", explanation: "" })
   }
@@ -396,6 +417,7 @@ function ManualCreateDialog({ isOpen, onClose, universities }: any) {
           session: selectedSession,
           description: description.trim() || undefined,
           videoUrl: videoUrl.trim() || undefined,
+          accessType, // Add access type
           questions: questions.map(q => ({
             text: q.text.trim(),
             options: [
@@ -477,6 +499,16 @@ function ManualCreateDialog({ isOpen, onClose, universities }: any) {
             <div>
               <Label>Description</Label>
               <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description" rows={2} />
+            </div>
+            <div>
+              <Label>Access Type *</Label>
+              <Select value={accessType} onValueChange={(value: "free" | "paid") => setAccessType(value)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">✅ Free (No payment required)</SelectItem>
+                  <SelectItem value="paid">🔒 Paid (Requires subscription)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -592,6 +624,7 @@ function CSVUploadDialog({ isOpen, onClose, universities }: any) {
   const [selectedUniversity, setSelectedUniversity] = useState("")
   const [selectedUnit, setSelectedUnit] = useState("")
   const [selectedSession, setSelectedSession] = useState("")
+  const [accessType, setAccessType] = useState<"free" | "paid">("paid") // New field
   const [filePreview, setFilePreview] = useState("")
 
   const [createQuestionSet, { isLoading }] = useCreateQuestionSetMutation()
@@ -604,6 +637,7 @@ function CSVUploadDialog({ isOpen, onClose, universities }: any) {
     setSelectedUniversity("")
     setSelectedUnit("")
     setSelectedSession("")
+    setAccessType("paid")
     setFilePreview("")
   }
 
@@ -760,6 +794,7 @@ function CSVUploadDialog({ isOpen, onClose, universities }: any) {
         session: selectedSession,
         description: description.trim() || undefined,
         videoUrl: videoUrl.trim() || undefined,
+        accessType, // Add access type
         questions,
       },
     }).unwrap()
@@ -840,6 +875,17 @@ function CSVUploadDialog({ isOpen, onClose, universities }: any) {
           <div>
             <Label>Description (Optional)</Label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description" rows={2} />
+          </div>
+
+          <div>
+            <Label>Access Type *</Label>
+            <Select value={accessType} onValueChange={(value: "free" | "paid") => setAccessType(value)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">✅ Free (No payment required)</SelectItem>
+                <SelectItem value="paid">🔒 Paid (Requires subscription)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -930,6 +976,95 @@ function ViewQuestionsDialog({ isOpen, onClose, questionSet }: any) {
 
         <DialogFooter>
           <Button onClick={onClose}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Edit Access Type Dialog
+function EditAccessTypeDialog({ isOpen, onClose, questionSet }: any) {
+  const [accessType, setAccessType] = useState<"free" | "paid">("paid")
+  const [updateQuestionSet, { isLoading }] = useUpdateQuestionSetMutation()
+
+  // Set initial value when questionSet changes
+  useEffect(() => {
+    if (questionSet) {
+      setAccessType(questionSet.accessType || "paid")
+    }
+  }, [questionSet])
+
+  const handleUpdate = async () => {
+    if (!questionSet) return
+
+    try {
+      await updateQuestionSet({
+        id: questionSet._id,
+        data: { accessType },
+      }).unwrap()
+
+      toast.success("Access type updated successfully!")
+      onClose()
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to update access type")
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Access Type</DialogTitle>
+          <DialogDescription>
+            Change whether this question set is free or requires a paid subscription
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Question Set: {questionSet?.name}</p>
+            <p className="text-xs text-gray-500">
+              {questionSet?.university?.name} • Unit {questionSet?.unit} • {questionSet?.session}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Access Type</Label>
+            <Select value={accessType} onValueChange={(value: "free" | "paid") => setAccessType(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-600">✅</span>
+                    <span>Free - No payment required</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="paid">
+                  <div className="flex items-center gap-2">
+                    <span className="text-orange-600">🔒</span>
+                    <span>Paid - Requires subscription</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-800">
+              <strong>Note:</strong> Changing to "Paid" will require users to have an active subscription to access this content.
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button onClick={handleUpdate} disabled={isLoading}>
+            {isLoading ? "Updating..." : "Update Access Type"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

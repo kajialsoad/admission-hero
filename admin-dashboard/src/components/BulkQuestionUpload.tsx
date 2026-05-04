@@ -48,6 +48,7 @@ export function BulkQuestionSetUpload({ isOpen, onClose }: BulkQuestionSetUpload
   const [filePreview, setFilePreview] = useState<string>("")
   const [parsedQuestions, setParsedQuestions] = useState<BulkQuestion[]>([])
   const [description, setDescription] = useState("")
+  const [accessType, setAccessType] = useState<"free" | "paid">("paid") // New field
 
   const { data: universitiesData } = useGetUniversitiesQuery({})
   const [createSet, { isLoading: isCreating }] = useCreateQuestionSetMutation()
@@ -135,6 +136,7 @@ export function BulkQuestionSetUpload({ isOpen, onClose }: BulkQuestionSetUpload
           unit: selectedUnit,
           session: selectedSession,
           description: description?.trim() || undefined,
+          accessType, // Add access type
           questions,
         },
       }).unwrap()
@@ -156,6 +158,7 @@ export function BulkQuestionSetUpload({ isOpen, onClose }: BulkQuestionSetUpload
     setFilePreview("")
     setParsedQuestions([])
     setDescription("")
+    setAccessType("paid")
     onClose()
   }
 
@@ -250,6 +253,19 @@ export function BulkQuestionSetUpload({ isOpen, onClose }: BulkQuestionSetUpload
                 placeholder="Add a description for this question set..."
                 rows={2}
               />
+            </div>
+
+            <div>
+              <Label htmlFor="accessType">Access Type *</Label>
+              <Select value={accessType} onValueChange={(value: "free" | "paid") => setAccessType(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">✅ Free (No payment required)</SelectItem>
+                  <SelectItem value="paid">🔒 Paid (Requires subscription)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

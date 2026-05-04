@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/exam_provider.dart';
+import '../../providers/subscription_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
 
@@ -30,6 +31,58 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
       session: widget.session,
       limit: 50,
     );
+  }
+
+  // Check if user can access paid content
+  Future<bool> _checkPaidAccess(QuestionSet set) async {
+    // If set is free, allow access
+    if (set.isFree) return true;
+
+    // Check subscription status
+    final subscriptionProvider = context.read<SubscriptionProvider>();
+    final hasActiveSubscription = subscriptionProvider.hasSubscription;
+
+    if (!hasActiveSubscription) {
+      // Show dialog and redirect to subscription page
+      if (!mounted) return false;
+      
+      final shouldNavigate = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.lock, color: AppColors.warning),
+              SizedBox(width: 8),
+              Text('Premium Content'),
+            ],
+          ),
+          content: const Text(
+            'This question set requires an active subscription. Would you like to view our subscription plans?',
+            style: TextStyle(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text('View Plans'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldNavigate == true && mounted) {
+        Navigator.pushNamed(context, '/subscription');
+      }
+      return false;
+    }
+
+    return true;
   }
 
   @override
@@ -215,6 +268,34 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
                     )
                   ),
                 ),
+                const SizedBox(width: 8),
+                // Access Type Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: set.isFree ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7), 
+                    borderRadius: BorderRadius.circular(20)
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        set.isFree ? Icons.check_circle : Icons.lock,
+                        size: 12,
+                        color: set.isFree ? const Color(0xFF16A34A) : const Color(0xFFCA8A04),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        set.isFree ? 'Free' : 'Paid',
+                        style: TextStyle(
+                          fontSize: 11, 
+                          color: set.isFree ? const Color(0xFF16A34A) : const Color(0xFFCA8A04), 
+                          fontWeight: FontWeight.w700
+                        )
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             
@@ -254,7 +335,12 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
                 // 1. Start Exam
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, '/exam', arguments: set.id),
+                    onPressed: () async {
+                      final canAccess = await _checkPaidAccess(set);
+                      if (canAccess && mounted) {
+                        Navigator.pushNamed(context, '/exam', arguments: set.id);
+                      }
+                    },
                     icon: const Icon(Icons.play_circle_outline, size: 18),
                     label: const Text('Start Exam', style: TextStyle(fontSize: 13)),
                     style: ElevatedButton.styleFrom(
@@ -273,7 +359,12 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
                 // 2. Questions with Answers
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, '/questions-view', arguments: set),
+                    onPressed: () async {
+                      final canAccess = await _checkPaidAccess(set);
+                      if (canAccess && mounted) {
+                        Navigator.pushNamed(context, '/questions-view', arguments: set);
+                      }
+                    },
                     icon: const Icon(Icons.description_outlined, size: 18),
                     label: const Text('Answers', style: TextStyle(fontSize: 13)),
                     style: OutlinedButton.styleFrom(
@@ -300,16 +391,19 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
                   ),
                   child: IconButton(
                     onPressed: set.videoUrl != null 
-                      ? () {
-                          Navigator.pushNamed(
-                            context, 
-                            '/video-player',
-                            arguments: {
-                              'videoUrl': set.videoUrl!,
-                              'title': set.name,
-                              'description': set.description,
-                            },
-                          );
+                      ? () async {
+                          final canAccess = await _checkPaidAccess(set);
+                          if (canAccess && mounted) {
+                            Navigator.pushNamed(
+                              context, 
+                              '/video-player',
+                              arguments: {
+                                'videoUrl': set.videoUrl!,
+                                'title': set.name,
+                                'description': set.description,
+                              },
+                            );
+                          }
                         }
                       : null,
                     icon: Icon(

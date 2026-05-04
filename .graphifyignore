@@ -1,0 +1,100 @@
+# Graphify Ignore File
+# Files and directories to exclude from graph generation
+
+# Dependencies
+**/node_modules/**
+**/vendor/**
+**/bower_components/**
+
+# Build outputs
+**/dist/**
+**/build/**
+**/out/**
+**/.next/**
+**/target/**
+
+# Generated files
+**/*.generated.*
+**/*.gen.*
+**/*.g.dart
+**/generated/**
+
+# Build artifacts
+**/*.min.js
+**/*.bundle.js
+**/*.chunk.js
+**/*.map
+
+# Package manager files
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+**/composer.lock
+**/Gemfile.lock
+
+# IDE and editor files
+**/.vscode/**
+**/.idea/**
+**/.vs/**
+**/*.swp
+**/*.swo
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+**/desktop.ini
+
+# Test coverage
+**/coverage/**
+**/.nyc_output/**
+
+# Logs
+**/*.log
+**/logs/**
+
+# Temporary files
+**/tmp/**
+**/temp/**
+**/.cache/**
+
+# Admin dashboard build (already built)
+admin-dashboard-build/**
+backend/admin-dashboard-build/**
+
+# Flutter build artifacts
+**/.dart_tool/**
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/flutter_export_environment.sh
+
+# Android build
+**/android/app/build/**
+**/android/.gradle/**
+**/android/gradle/**
+
+# iOS build
+**/ios/Pods/**
+**/ios/.symlinks/**
+**/ios/Flutter/Flutter.framework/**
+**/ios/Flutter/Flutter.podspec
+
+# Python
+**/__pycache__/**
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/venv/**
+**/env/**
+
+# Graphify output (don't re-analyze)
+graphify-out/**
+
+# Scripts we created for this task
+show_community_files.js
+list_all_communities.js
+add_community_names.js
+update_graph_communities.js
+regenerate_graph_html.js
+generate_community_markdown.js
+communities_report.txt

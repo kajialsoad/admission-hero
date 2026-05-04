@@ -41,6 +41,7 @@ export interface QuestionSet {
   totalQuestions: number
   videoUrl?: string
   description?: string
+  accessType: 'free' | 'paid' // Add accessType field
   createdAt: string
   updatedAt: string
 }
@@ -73,6 +74,7 @@ export interface CreateQuestionSetRequest {
     session: string
     videoUrl?: string
     description?: string
+    accessType?: 'free' | 'paid' // Add accessType field
     questions: {
       text: string
       options: QuestionOption[]
@@ -88,6 +90,7 @@ export interface UpdateQuestionSetRequest {
     name?: string
     videoUrl?: string
     description?: string
+    accessType?: 'free' | 'paid' // Add accessType field
   }
 }
 

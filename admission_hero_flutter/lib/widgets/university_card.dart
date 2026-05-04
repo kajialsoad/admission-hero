@@ -63,6 +63,44 @@ class UniversityCard extends StatelessWidget {
                         child: Text('${university.units.length} Units',
                             style: const TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w600)),
                       ),
+                      if (university.freeQuestionSetsCount != null && university.freeQuestionSetsCount! > 0) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.check_circle, size: 10, color: Color(0xFF16A34A)),
+                              const SizedBox(width: 3),
+                              Text('${university.freeQuestionSetsCount} Free',
+                                  style: const TextStyle(fontSize: 11, color: Color(0xFF16A34A), fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (university.paidQuestionSetsCount != null && university.paidQuestionSetsCount! > 0) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.lock, size: 10, color: Color(0xFFCA8A04)),
+                              const SizedBox(width: 3),
+                              Text('${university.paidQuestionSetsCount} Paid',
+                                  style: const TextStyle(fontSize: 11, color: Color(0xFFCA8A04), fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],

@@ -36,6 +36,14 @@ class FirebaseService {
   // ── Initialize all Firebase services ──────────────────────────────────────
   Future<void> initialize() async {
     try {
+      // Skip FCM initialization on web platform
+      if (kIsWeb) {
+        debugPrint('⚠️  FCM skipped on web platform');
+        await _analytics.logAppOpen();
+        debugPrint('✅ FirebaseService initialized (web - analytics only)');
+        return;
+      }
+
       // Set background handler
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 

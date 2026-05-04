@@ -23,9 +23,33 @@ export const getUniversities = async (req: Request, res: Response) => {
       .skip((page - 1) * limit)
       .limit(limit);
 
+    // Import QuestionSet model dynamically to avoid circular dependency
+    const QuestionSet = require('../models/QuestionSet').default;
+
+    // Add free/paid counts for each university
+    const universitiesWithCounts = await Promise.all(
+      universities.map(async (uni) => {
+        const freeCount = await QuestionSet.countDocuments({
+          university: uni._id,
+          accessType: 'free'
+        });
+        
+        const paidCount = await QuestionSet.countDocuments({
+          university: uni._id,
+          accessType: 'paid'
+        });
+
+        return {
+          ...uni.toObject(),
+          freeQuestionSetsCount: freeCount,
+          paidQuestionSetsCount: paidCount,
+        };
+      })
+    );
+
     res.json({
       success: true,
-      data: universities,
+      data: universitiesWithCounts,
       pagination: {
         page,
         limit,

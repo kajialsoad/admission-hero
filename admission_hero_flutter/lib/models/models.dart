@@ -62,6 +62,8 @@ class University {
   final String? logo;
   final List<String> units;
   final DateTime createdAt;
+  final int? freeQuestionSetsCount;
+  final int? paidQuestionSetsCount;
 
   University({
     required this.id,
@@ -70,7 +72,11 @@ class University {
     this.logo,
     required this.units,
     required this.createdAt,
+    this.freeQuestionSetsCount,
+    this.paidQuestionSetsCount,
   });
+
+  int get totalQuestionSets => (freeQuestionSetsCount ?? 0) + (paidQuestionSetsCount ?? 0);
 
   factory University.fromJson(Map<String, dynamic> json) {
     return University(
@@ -80,6 +86,8 @@ class University {
       logo: json['logo'],
       units: List<String>.from(json['units'] ?? []),
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      freeQuestionSetsCount: json['freeQuestionSetsCount'],
+      paidQuestionSetsCount: json['paidQuestionSetsCount'],
     );
   }
 
@@ -91,6 +99,8 @@ class University {
       'logo': logo,
       'units': units,
       'createdAt': createdAt.toIso8601String(),
+      'freeQuestionSetsCount': freeQuestionSetsCount,
+      'paidQuestionSetsCount': paidQuestionSetsCount,
     };
   }
 }
@@ -213,6 +223,7 @@ class QuestionSet {
   final int totalQuestions;
   final String? description;
   final String? videoUrl;
+  final String accessType; // New field: 'free' or 'paid'
   final List<Question>? questions;
   final DateTime createdAt;
 
@@ -225,6 +236,7 @@ class QuestionSet {
     required this.totalQuestions,
     this.description,
     this.videoUrl,
+    this.accessType = 'paid', // Default to paid
     this.questions,
     required this.createdAt,
   });
@@ -233,6 +245,9 @@ class QuestionSet {
   String get universityName => university['name'] ?? '';
 
   int get durationInMinutes => (totalQuestions * 45) ~/ 60;
+  
+  bool get isPaid => accessType == 'paid';
+  bool get isFree => accessType == 'free';
 
   factory QuestionSet.fromJson(Map<String, dynamic> json) {
     return QuestionSet(
@@ -244,6 +259,7 @@ class QuestionSet {
       totalQuestions: json['totalQuestions'] ?? 0,
       description: json['description'],
       videoUrl: json['videoUrl'],
+      accessType: json['accessType'] ?? 'paid', // Default to paid if not specified
       questions: json['questions'] != null
           ? (json['questions'] as List).map((q) => Question.fromJson(q)).toList()
           : null,
@@ -261,6 +277,7 @@ class QuestionSet {
       'totalQuestions': totalQuestions,
       'description': description,
       'videoUrl': videoUrl,
+      'accessType': accessType, // Add access type
       'questions': questions?.map((q) => q.toJson()).toList(),
       'createdAt': createdAt.toIso8601String(),
     };
