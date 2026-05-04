@@ -176,6 +176,20 @@ analyze_output.txt
 # Graphify output
 graphify-out/
 
+# Documentation folders
+docs/
+**/docs/
+doc/
+**/doc/
+documentation/
+**/documentation/
+
+# Script folders
+scripts/
+**/scripts/
+script/
+**/script/
+
 # Markdown files
 *.md
 **/*.md
