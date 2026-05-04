@@ -138,8 +138,14 @@ class SubscriptionProvider extends ChangeNotifier {
     try {
       final data = await _service.checkSubscription();
       
+      print('[DEBUG] Subscription check response: $data');
+      
       if (data != null) {
         _hasSubscription = data['hasSubscription'] ?? false;
+        
+        print('[DEBUG] hasSubscription: $_hasSubscription');
+        print('[DEBUG] subscriptionStatus: ${data['subscriptionStatus']}');
+        print('[DEBUG] expireAt: ${data['expireAt']}');
         
         if (data['subscription'] != null) {
           _currentSubscription = Subscription.fromJson(data['subscription']);
@@ -150,6 +156,8 @@ class SubscriptionProvider extends ChangeNotifier {
         }
         
         notifyListeners();
+      } else {
+        print('[DEBUG] Subscription check returned null');
       }
     } catch (e) {
       print('Check subscription status error: $e');

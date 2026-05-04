@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/subscription_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
+import 'package:intl/intl.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -12,6 +14,13 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
+
+    // Debug: Print user subscription info
+    if (user != null) {
+      print('DEBUG Profile: subscriptionStatus = ${user.subscriptionStatus}');
+      print('DEBUG Profile: subscriptionType = ${user.subscriptionType}');
+      print('DEBUG Profile: subscriptionExpireAt = ${user.subscriptionExpireAt}');
+    }
 
     final menuItems = [
       _MenuItem(id: 'edit-profile', title: 'Edit Profile', icon: Icons.edit_outlined,
@@ -77,7 +86,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(user?.email ?? user?.phone ?? 'Not logged in',
                             style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
-                        if (user?.isSubscribed == true) ...[
+                        if (user?.subscriptionStatus == 'paid') ...[
                           const SizedBox(height: 10),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -94,6 +103,147 @@ class ProfileScreen extends StatelessWidget {
                         ],
                       ]),
                     ),
+
+                    // Subscription Info Card (if paid user)
+                    if (user?.subscriptionStatus == 'paid' && user?.subscriptionExpireAt != null)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF10B981), Color(0xFF059669)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF10B981).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(Icons.card_membership, color: Colors.white, size: 20),
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Text(
+                                    'আপনার সাবস্ক্রিপশন',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'Active',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'প্যাকেজ:',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      Text(
+                                        _getPackageName(user?.subscriptionType),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'বাকি আছে:',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${_getDaysRemaining(user?.subscriptionExpireAt)} দিন',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'মেয়াদ শেষ:',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      Text(
+                                        _formatExpiryDate(user?.subscriptionExpireAt),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    const SizedBox(height: 16),
 
                     // Login Prompt if guest
                     if (user == null)
@@ -199,6 +349,41 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getPackageName(String? subscriptionType) {
+    if (subscriptionType == null) return 'Unknown';
+    
+    switch (subscriptionType) {
+      case '1-month':
+        return '১ মাস প্রিমিয়াম';
+      case '3-month':
+        return '৩ মাস প্রিমিয়াম';
+      case '6-month':
+        return '৬ মাস প্রিমিয়াম';
+      case '12-month':
+        return '১২ মাস প্রিমিয়াম';
+      default:
+        return subscriptionType;
+    }
+  }
+
+  int _getDaysRemaining(DateTime? expiryDate) {
+    if (expiryDate == null) return 0;
+    final now = DateTime.now();
+    final difference = expiryDate.difference(now);
+    return difference.inDays > 0 ? difference.inDays : 0;
+  }
+
+  String _formatExpiryDate(DateTime? expiryDate) {
+    if (expiryDate == null) return 'N/A';
+    
+    final months = [
+      'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+      'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+    ];
+    
+    return '${expiryDate.day} ${months[expiryDate.month - 1]}, ${expiryDate.year}';
   }
 }
 

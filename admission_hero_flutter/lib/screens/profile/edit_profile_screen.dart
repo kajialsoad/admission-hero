@@ -91,7 +91,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         role: currentUser.role,
         avatar: currentUser.avatar, // TODO: Upload image and get URL
         subscriptionStatus: currentUser.subscriptionStatus,
-        subscriptionExpiry: currentUser.subscriptionExpiry,
+        subscriptionType: currentUser.subscriptionType,
+        subscriptionExpireAt: currentUser.subscriptionExpireAt,
       );
       
       final success = await authProvider.updateUser(

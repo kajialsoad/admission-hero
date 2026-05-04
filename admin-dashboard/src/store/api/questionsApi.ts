@@ -94,6 +94,26 @@ export interface UpdateQuestionSetRequest {
   }
 }
 
+export interface AddQuestionsToSetRequest {
+  setId: string
+  questions: {
+    text: string
+    options: QuestionOption[]
+    correctAnswer: string
+    explanation?: string
+  }[]
+}
+
+export interface UpdateQuestionRequest {
+  questionId: string
+  data: {
+    text?: string
+    options?: QuestionOption[]
+    correctAnswer?: string
+    explanation?: string
+  }
+}
+
 export const questionsApi = adminApiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getQuestionSets: builder.query<QuestionSetResponse, QuestionsQuery>({
@@ -163,6 +183,49 @@ export const questionsApi = adminApiSlice.injectEndpoints({
       query: (setId) => `/questions/sets/${setId}/questions`,
       providesTags: (result, error, setId) => [{ type: "Question", id: setId }],
     }),
+
+    addQuestionsToSet: builder.mutation<
+      { success: boolean; data: Question[]; message: string },
+      AddQuestionsToSetRequest
+    >({
+      query: ({ setId, questions }) => ({
+        url: `/questions/sets/${setId}/questions`,
+        method: "POST",
+        body: { questions },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      invalidatesTags: (result, error, { setId }) => [
+        { type: "Question", id: setId },
+        { type: "QuestionSet", id: "LIST" },
+      ],
+    }),
+
+    updateQuestion: builder.mutation<
+      { success: boolean; data: Question; message: string },
+      UpdateQuestionRequest
+    >({
+      query: ({ questionId, data }) => ({
+        url: `/questions/${questionId}`,
+        method: "PUT",
+        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      invalidatesTags: (result, error, { questionId }) => [
+        { type: "Question", id: result?.data.questionSetId },
+      ],
+    }),
+
+    deleteQuestion: builder.mutation<{ success: boolean; message: string }, string>({
+      query: (questionId) => ({
+        url: `/questions/${questionId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [{ type: "Question" }, { type: "QuestionSet", id: "LIST" }],
+    }),
   }),
 })
 
@@ -172,4 +235,7 @@ export const {
   useUpdateQuestionSetMutation,
   useDeleteQuestionSetMutation,
   useGetQuestionsBySetIdQuery,
+  useAddQuestionsToSetMutation,
+  useUpdateQuestionMutation,
+  useDeleteQuestionMutation,
 } = questionsApi

@@ -314,3 +314,229 @@ export const getQuestionsBySetId = async (req: Request, res: Response) => {
     })
   }
 }
+
+// Add questions to existing question set
+export const addQuestionsToSet = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const { setId } = req.params
+    const { questions } = req.body
+
+    // Check if question set exists
+    const questionSet = await QuestionSet.findById(setId)
+    if (!questionSet) {
+      await session.abortTransaction()
+      return res.status(404).json({
+        success: false,
+        message: "Question set not found",
+      })
+    }
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      await session.abortTransaction()
+      return res.status(400).json({
+        success: false,
+        message: "At least one question is required",
+      })
+    }
+
+    // Validate each question
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i]
+      if (!q.text || !Array.isArray(q.options) || q.options.length !== 4 || !q.correctAnswer) {
+        await session.abortTransaction()
+        return res.status(400).json({
+          success: false,
+          message: `Invalid question at position ${i + 1}. Must have text, 4 options, and correct answer`,
+        })
+      }
+      
+      if (!["A", "B", "C", "D"].includes(q.correctAnswer)) {
+        await session.abortTransaction()
+        return res.status(400).json({
+          success: false,
+          message: `Invalid correct answer at position ${i + 1}. Must be A, B, C, or D`,
+        })
+      }
+    }
+
+    // Get current max question number
+    const lastQuestion = await Question.findOne({ questionSetId: setId })
+      .sort({ questionNumber: -1 })
+      .limit(1)
+    
+    const startNumber = lastQuestion ? lastQuestion.questionNumber + 1 : 1
+
+    // Create new questions
+    const questionDocs = questions.map((q: any, index: number) => ({
+      questionSetId: setId,
+      university: questionSet.university,
+      unit: questionSet.unit,
+      session: questionSet.session,
+      questionNumber: startNumber + index,
+      text: q.text.trim(),
+      questionType: "mcq",
+      options: q.options.map((opt: any) => ({
+        key: opt.key,
+        text: opt.text.trim(),
+      })),
+      correctAnswer: q.correctAnswer,
+      explanations: q.explanation
+        ? [{ title: "Explanation", content: q.explanation.trim() }]
+        : [],
+    }))
+
+    const createdQuestions = await Question.insertMany(questionDocs, { session })
+
+    // Update total questions count
+    await QuestionSet.findByIdAndUpdate(
+      setId,
+      { $inc: { totalQuestions: questions.length } },
+      { session }
+    )
+
+    await session.commitTransaction()
+
+    res.status(201).json({
+      success: true,
+      data: createdQuestions,
+      message: `${questions.length} question(s) added successfully`,
+    })
+  } catch (error: any) {
+    await session.abortTransaction()
+    console.error("Add questions to set error:", error)
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to add questions",
+    })
+  } finally {
+    session.endSession()
+  }
+}
+
+// Update individual question
+export const updateQuestion = async (req: Request, res: Response) => {
+  try {
+    const { questionId } = req.params
+    const { text, options, correctAnswer, explanation } = req.body
+
+    const question = await Question.findById(questionId)
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: "Question not found",
+      })
+    }
+
+    // Validate if provided
+    if (options && (!Array.isArray(options) || options.length !== 4)) {
+      return res.status(400).json({
+        success: false,
+        message: "Must have exactly 4 options",
+      })
+    }
+
+    if (correctAnswer && !["A", "B", "C", "D"].includes(correctAnswer)) {
+      return res.status(400).json({
+        success: false,
+        message: "Correct answer must be A, B, C, or D",
+      })
+    }
+
+    // Update fields
+    const updateData: any = {}
+    if (text !== undefined) updateData.text = text.trim()
+    if (options !== undefined) {
+      updateData.options = options.map((opt: any) => ({
+        key: opt.key,
+        text: opt.text.trim(),
+      }))
+    }
+    if (correctAnswer !== undefined) updateData.correctAnswer = correctAnswer
+    if (explanation !== undefined) {
+      updateData.explanations = explanation
+        ? [{ title: "Explanation", content: explanation.trim() }]
+        : []
+    }
+
+    const updatedQuestion = await Question.findByIdAndUpdate(
+      questionId,
+      updateData,
+      { new: true, runValidators: true }
+    )
+
+    res.json({
+      success: true,
+      data: updatedQuestion,
+      message: "Question updated successfully",
+    })
+  } catch (error: any) {
+    console.error("Update question error:", error)
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update question",
+    })
+  }
+}
+
+// Delete individual question
+export const deleteQuestion = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+    const { questionId } = req.params
+
+    const question = await Question.findById(questionId)
+    if (!question) {
+      await session.abortTransaction()
+      return res.status(404).json({
+        success: false,
+        message: "Question not found",
+      })
+    }
+
+    const setId = question.questionSetId
+
+    // Delete the question
+    await Question.findByIdAndDelete(questionId, { session })
+
+    // Update total questions count
+    await QuestionSet.findByIdAndUpdate(
+      setId,
+      { $inc: { totalQuestions: -1 } },
+      { session }
+    )
+
+    // Renumber remaining questions
+    const remainingQuestions = await Question.find({ questionSetId: setId })
+      .sort({ questionNumber: 1 })
+      .session(session)
+
+    for (let i = 0; i < remainingQuestions.length; i++) {
+      await Question.findByIdAndUpdate(
+        remainingQuestions[i]._id,
+        { questionNumber: i + 1 },
+        { session }
+      )
+    }
+
+    await session.commitTransaction()
+
+    res.json({
+      success: true,
+      message: "Question deleted successfully",
+    })
+  } catch (error: any) {
+    await session.abortTransaction()
+    console.error("Delete question error:", error)
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to delete question",
+    })
+  } finally {
+    session.endSession()
+  }
+}

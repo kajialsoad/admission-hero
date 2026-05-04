@@ -6,6 +6,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/models.dart';
 import '../../providers/subscription_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/google_play_billing_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
@@ -268,6 +269,25 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
         
         // Show message
         _showMessage('Redirecting to bKash payment...');
+        
+        // Wait a bit and then refresh subscription status
+        Future.delayed(const Duration(seconds: 3), () async {
+          if (mounted) {
+            await provider.checkSubscriptionStatus();
+            
+            // Check if subscription is now active
+            if (provider.hasSubscription) {
+              _showMessage('✅ Payment Successful! Subscription Activated!');
+              
+              // Navigate back to home after 2 seconds
+              Future.delayed(const Duration(seconds: 2), () {
+                if (mounted) {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                }
+              });
+            }
+          }
+        });
       } else {
         _showMessage('Failed to open bKash payment', isError: true);
       }
@@ -621,11 +641,25 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: provider.selectedPackage != null && 
-                                      !provider.isLoading &&
-                                      (provider.bkashEnabled || provider.googlePlayEnabled)
-                                ? _proceedToPayment
-                                : null,
+                            onPressed: () {
+                              // Check if selected package is already paid
+                              final user = context.read<AuthProvider>().user;
+                              final hasSelectedPackage = user?.subscriptionStatus == 'paid' && 
+                                                         user?.subscriptionType != null &&
+                                                         provider.selectedPackage != null &&
+                                                         _isMatchingPackage(user!.subscriptionType!, provider.selectedPackage!.type);
+                              
+                              if (hasSelectedPackage) {
+                                _showMessage('আপনি ইতিমধ্যে এই প্যাকেজটি কিনেছেন। অন্য প্যাকেজ সিলেক্ট করুন।', isError: true);
+                                return;
+                              }
+                              
+                              if (provider.selectedPackage != null && 
+                                  !provider.isLoading &&
+                                  (provider.bkashEnabled || provider.googlePlayEnabled)) {
+                                _proceedToPayment();
+                              }
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -643,9 +677,22 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
                                     ),
                                   )
                                 : Text(
-                                    (!provider.bkashEnabled && !provider.googlePlayEnabled)
-                                        ? 'No Payment Methods Available'
-                                        : 'Pay Now',
+                                    () {
+                                      if (!provider.bkashEnabled && !provider.googlePlayEnabled) {
+                                        return 'No Payment Methods Available';
+                                      }
+                                      
+                                      // Check if selected package is already paid
+                                      final user = context.read<AuthProvider>().user;
+                                      if (provider.selectedPackage != null &&
+                                          user?.subscriptionStatus == 'paid' && 
+                                          user?.subscriptionType != null &&
+                                          _isMatchingPackage(user!.subscriptionType!, provider.selectedPackage!.type)) {
+                                        return 'Already Paid - Select Another Package';
+                                      }
+                                      
+                                      return 'Pay Now';
+                                    }(),
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
@@ -672,8 +719,14 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
   Widget _buildPackageCard(Package package, SubscriptionProvider provider) {
     final isSelected = provider.selectedPackage?.id == package.id;
     
+    // Check if user already has this package type
+    final user = context.read<AuthProvider>().user;
+    final hasThisPackage = user?.subscriptionStatus == 'paid' && 
+                           user?.subscriptionType != null &&
+                           _isMatchingPackage(user!.subscriptionType!, package.type);
+    
     return GestureDetector(
-      onTap: () {
+      onTap: hasThisPackage ? null : () {
         provider.selectPackage(package);
         
         // Initialize video if package has video URL
@@ -697,13 +750,15 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: hasThisPackage ? Colors.grey.shade100 : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: hasThisPackage 
+                ? Colors.grey.shade300
+                : (isSelected ? AppColors.primary : AppColors.border),
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected
+          boxShadow: isSelected && !hasThisPackage
               ? [
                   BoxShadow(
                     color: AppColors.primary.withOpacity(0.2),
@@ -721,34 +776,63 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.border,
+                  color: hasThisPackage
+                      ? Colors.grey.shade400
+                      : (isSelected ? AppColors.primary : AppColors.border),
                   width: 2,
                 ),
-                color: isSelected ? AppColors.primary : Colors.transparent,
+                color: hasThisPackage
+                    ? Colors.grey.shade300
+                    : (isSelected ? AppColors.primary : Colors.transparent),
               ),
-              child: isSelected
+              child: isSelected && !hasThisPackage
                   ? const Icon(Icons.check, color: Colors.white, size: 16)
-                  : null,
+                  : hasThisPackage
+                      ? const Icon(Icons.check, color: Colors.white, size: 16)
+                      : null,
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    package.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          package.name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: hasThisPackage ? Colors.grey.shade600 : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      if (hasThisPackage)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.success),
+                          ),
+                          child: const Text(
+                            'Already Paid',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.success,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     package.durationText,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textMuted,
+                      color: hasThisPackage ? Colors.grey.shade500 : AppColors.textMuted,
                     ),
                   ),
                 ],
@@ -759,13 +843,36 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                color: hasThisPackage 
+                    ? Colors.grey.shade600
+                    : (isSelected ? AppColors.primary : AppColors.textPrimary),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  // Helper function to check if subscription type matches package type
+  bool _isMatchingPackage(String subscriptionType, String packageType) {
+    // subscriptionType: '3-month', '6-month', '12-month'
+    // packageType: 'monthly', 'quarterly', 'yearly', etc.
+    
+    if (subscriptionType == '3-month' && (packageType.contains('3') || packageType.contains('quarter'))) {
+      return true;
+    }
+    if (subscriptionType == '6-month' && packageType.contains('6')) {
+      return true;
+    }
+    if (subscriptionType == '12-month' && (packageType.contains('12') || packageType.contains('year'))) {
+      return true;
+    }
+    if (subscriptionType == '1-month' && (packageType.contains('1') || packageType == 'monthly')) {
+      return true;
+    }
+    
+    return false;
   }
 
   Widget _buildPaymentMethodCard(String method, String title, IconData icon) {

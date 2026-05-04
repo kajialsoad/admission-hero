@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Plus, MoreVertical, Trash2, BookOpen, Upload, X, Eye, Edit } from "lucide-react"
+import { Plus, MoreVertical, Trash2, BookOpen, Upload, X, Eye, Edit, Edit2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
@@ -23,7 +23,11 @@ import {
   useUpdateQuestionSetMutation,
   useDeleteQuestionSetMutation,
   useGetQuestionsBySetIdQuery,
+  useAddQuestionsToSetMutation,
+  useUpdateQuestionMutation,
+  useDeleteQuestionMutation,
   type QuestionSet,
+  type Question,
 } from "../store/api/questionsApi"
 import { useGetUniversitiesQuery } from "../store/api/universitiesApi"
 import toast from "react-hot-toast"
@@ -916,69 +920,142 @@ function CSVUploadDialog({ isOpen, onClose, universities }: any) {
 
 // View Questions Dialog
 function ViewQuestionsDialog({ isOpen, onClose, questionSet }: any) {
+  const [isAddMoreOpen, setIsAddMoreOpen] = useState(false)
+  const [isEditQuestionOpen, setIsEditQuestionOpen] = useState(false)
+  const [isDeleteQuestionOpen, setIsDeleteQuestionOpen] = useState(false)
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
+
   const { data, isLoading } = useGetQuestionsBySetIdQuery(questionSet?._id || "", {
     skip: !questionSet?._id,
   })
 
   const questions = data?.data || []
 
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>View Questions - {questionSet?.name}</DialogTitle>
-          <DialogDescription>
-            {questionSet?.university?.name} • Unit {questionSet?.unit} • {questionSet?.session} • Total: {questions.length} questions
-          </DialogDescription>
-        </DialogHeader>
+  const handleEditClick = (question: Question) => {
+    setSelectedQuestion(question)
+    setIsEditQuestionOpen(true)
+  }
 
-        <div className="overflow-y-auto max-h-[60vh] space-y-4 p-1">
-          {isLoading ? (
-            <div className="text-center py-8 text-gray-500">Loading questions...</div>
-          ) : questions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No questions found</div>
-          ) : (
-            questions.map((q: any) => (
-              <div key={q._id} className="border rounded-lg p-4 bg-gray-50">
-                <div className="flex items-start justify-between mb-3">
-                  <h4 className="font-medium text-sm">Question #{q.questionNumber}</h4>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">MCQ</span>
-                </div>
-                <p className="text-sm mb-3">{q.text}</p>
-                
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {q.options.map((opt: any) => (
-                    <div 
-                      key={opt.key} 
-                      className={`text-xs p-2 rounded border ${opt.key === q.correctAnswer ? 'bg-green-50 border-green-300' : 'bg-white'}`}
-                    >
-                      <span className="font-medium">{opt.key}.</span> {opt.text}
+  const handleDeleteClick = (question: Question) => {
+    setSelectedQuestion(question)
+    setIsDeleteQuestionOpen(true)
+  }
+
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>View Questions - {questionSet?.name}</DialogTitle>
+            <DialogDescription>
+              {questionSet?.university?.name} • Unit {questionSet?.unit} • {questionSet?.session} • Total: {questions.length} questions
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end mb-2">
+            <Button 
+              onClick={() => setIsAddMoreOpen(true)} 
+              className="bg-green-600 hover:bg-green-700"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add More Questions
+            </Button>
+          </div>
+
+          <div className="overflow-y-auto max-h-[60vh] space-y-4 p-1">
+            {isLoading ? (
+              <div className="text-center py-8 text-gray-500">Loading questions...</div>
+            ) : questions.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">No questions found</div>
+            ) : (
+              questions.map((q: Question) => (
+                <div key={q._id} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-start justify-between mb-3">
+                    <h4 className="font-medium text-sm">Question #{q.questionNumber}</h4>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">MCQ</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditClick(q)}
+                        className="h-7 w-7 p-0"
+                      >
+                        <Edit2 className="h-3.5 w-3.5 text-blue-600" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteClick(q)}
+                        className="h-7 w-7 p-0"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                      </Button>
                     </div>
-                  ))}
-                </div>
-                
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-green-600 font-medium">Correct Answer: {q.correctAnswer}</span>
+                  </div>
+                  <p className="text-sm mb-3">{q.text}</p>
+                  
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {q.options.map((opt: any) => (
+                      <div 
+                        key={opt.key} 
+                        className={`text-xs p-2 rounded border ${opt.key === q.correctAnswer ? 'bg-green-50 border-green-300' : 'bg-white'}`}
+                      >
+                        <span className="font-medium">{opt.key}.</span> {opt.text}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-green-600 font-medium">Correct Answer: {q.correctAnswer}</span>
+                    {q.explanations?.[0]?.content && (
+                      <span className="text-gray-600">📝 Has explanation</span>
+                    )}
+                  </div>
+                  
                   {q.explanations?.[0]?.content && (
-                    <span className="text-gray-600">📝 Has explanation</span>
+                    <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                      <strong>Explanation:</strong> {q.explanations[0].content}
+                    </div>
                   )}
                 </div>
-                
-                {q.explanations?.[0]?.content && (
-                  <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
-                    <strong>Explanation:</strong> {q.explanations[0].content}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
 
-        <DialogFooter>
-          <Button onClick={onClose}>Close</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button onClick={onClose}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add More Questions Dialog */}
+      <AddMoreQuestionsDialog 
+        isOpen={isAddMoreOpen} 
+        onClose={() => setIsAddMoreOpen(false)} 
+        questionSet={questionSet}
+      />
+
+      {/* Edit Question Dialog */}
+      <EditQuestionDialog 
+        isOpen={isEditQuestionOpen} 
+        onClose={() => {
+          setIsEditQuestionOpen(false)
+          setSelectedQuestion(null)
+        }} 
+        question={selectedQuestion}
+      />
+
+      {/* Delete Question Dialog */}
+      <DeleteQuestionDialog 
+        isOpen={isDeleteQuestionOpen} 
+        onClose={() => {
+          setIsDeleteQuestionOpen(false)
+          setSelectedQuestion(null)
+        }} 
+        question={selectedQuestion}
+      />
+    </>
   )
 }
 
@@ -1064,6 +1141,372 @@ function EditAccessTypeDialog({ isOpen, onClose, questionSet }: any) {
           </Button>
           <Button onClick={handleUpdate} disabled={isLoading}>
             {isLoading ? "Updating..." : "Update Access Type"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Add More Questions Dialog
+function AddMoreQuestionsDialog({ isOpen, onClose, questionSet }: any) {
+  const [questions, setQuestions] = useState<MCQQuestion[]>([])
+  const [currentQuestion, setCurrentQuestion] = useState<MCQQuestion>({
+    questionNumber: 1,
+    text: "",
+    optionA: "",
+    optionB: "",
+    optionC: "",
+    optionD: "",
+    correctAnswer: "A",
+    explanation: "",
+  })
+
+  const [addQuestionsToSet, { isLoading }] = useAddQuestionsToSetMutation()
+
+  const resetForm = () => {
+    setQuestions([])
+    setCurrentQuestion({ questionNumber: 1, text: "", optionA: "", optionB: "", optionC: "", optionD: "", correctAnswer: "A", explanation: "" })
+  }
+
+  const addQuestion = () => {
+    if (!currentQuestion.text.trim() || !currentQuestion.optionA.trim() || !currentQuestion.optionB.trim() || !currentQuestion.optionC.trim() || !currentQuestion.optionD.trim()) {
+      toast.error("Please fill question text and all options")
+      return
+    }
+
+    setQuestions([...questions, currentQuestion])
+    setCurrentQuestion({
+      questionNumber: questions.length + 2,
+      text: "",
+      optionA: "",
+      optionB: "",
+      optionC: "",
+      optionD: "",
+      correctAnswer: "A",
+      explanation: "",
+    })
+    toast.success(`Question ${questions.length + 1} added`)
+  }
+
+  const removeQuestion = (index: number) => {
+    const updated = questions.filter((_, i) => i !== index).map((q, i) => ({ ...q, questionNumber: i + 1 }))
+    setQuestions(updated)
+    setCurrentQuestion({ ...currentQuestion, questionNumber: updated.length + 1 })
+  }
+
+  const handleSubmit = async () => {
+    if (questions.length === 0) {
+      toast.error("Please add at least one question")
+      return
+    }
+
+    try {
+      await addQuestionsToSet({
+        setId: questionSet._id,
+        questions: questions.map(q => ({
+          text: q.text.trim(),
+          options: [
+            { key: "A", text: q.optionA.trim() },
+            { key: "B", text: q.optionB.trim() },
+            { key: "C", text: q.optionC.trim() },
+            { key: "D", text: q.optionD.trim() },
+          ],
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation?.trim() || undefined,
+        })),
+      }).unwrap()
+
+      toast.success(`${questions.length} question(s) added successfully!`)
+      resetForm()
+      onClose()
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to add questions")
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add More Questions - {questionSet?.name}</DialogTitle>
+          <DialogDescription>
+            Add additional questions to this question set
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Current Question Form */}
+          <div className="border rounded-lg p-4 space-y-3 bg-white">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-lg">New Question</h3>
+              <span className="text-sm text-gray-500">MCQ Format</span>
+            </div>
+            
+            <div>
+              <Label>Question Text *</Label>
+              <Textarea 
+                value={currentQuestion.text} 
+                onChange={(e) => setCurrentQuestion({ ...currentQuestion, text: e.target.value })} 
+                placeholder="Enter the question" 
+                rows={4} 
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
+              {["A", "B", "C", "D"].map((key) => (
+                <div key={key}>
+                  <Label>Option {key} *</Label>
+                  <Input 
+                    value={currentQuestion[`option${key}` as keyof MCQQuestion] as string} 
+                    onChange={(e) => setCurrentQuestion({ ...currentQuestion, [`option${key}`]: e.target.value })} 
+                    placeholder={`Enter option ${key}`} 
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
+              <div>
+                <Label>Correct Answer *</Label>
+                <Select value={currentQuestion.correctAnswer} onValueChange={(value: any) => setCurrentQuestion({ ...currentQuestion, correctAnswer: value })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["A", "B", "C", "D"].map((key) => (
+                      <SelectItem key={key} value={key}>Option {key}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Explanation (Optional)</Label>
+                <Textarea 
+                  value={currentQuestion.explanation} 
+                  onChange={(e) => setCurrentQuestion({ ...currentQuestion, explanation: e.target.value })} 
+                  placeholder="Brief explanation" 
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <Button onClick={addQuestion} className="w-full bg-green-600 hover:bg-green-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Question ({questions.length})
+            </Button>
+          </div>
+
+          {/* Added Questions List */}
+          {questions.length > 0 && (
+            <div className="border rounded-lg p-4 max-h-64 overflow-y-auto bg-gray-50">
+              <h3 className="font-medium mb-3">Added Questions ({questions.length})</h3>
+              <div className="space-y-2">
+                {questions.map((q, index) => (
+                  <div key={index} className="flex items-start justify-between bg-white p-3 rounded border">
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">#{index + 1}</span>
+                      <p className="text-sm text-gray-700 mt-1">{q.text.substring(0, 80)}{q.text.length > 80 ? "..." : ""}</p>
+                      <p className="text-xs text-gray-500 mt-1">Correct: {q.correctAnswer}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => removeQuestion(index)} 
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => { resetForm(); onClose(); }} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isLoading || questions.length === 0} 
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {isLoading ? "Adding..." : `Add ${questions.length} Question(s)`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Edit Question Dialog
+function EditQuestionDialog({ isOpen, onClose, question }: { isOpen: boolean; onClose: () => void; question: Question | null }) {
+  const [text, setText] = useState("")
+  const [optionA, setOptionA] = useState("")
+  const [optionB, setOptionB] = useState("")
+  const [optionC, setOptionC] = useState("")
+  const [optionD, setOptionD] = useState("")
+  const [correctAnswer, setCorrectAnswer] = useState<"A" | "B" | "C" | "D">("A")
+  const [explanation, setExplanation] = useState("")
+
+  const [updateQuestion, { isLoading }] = useUpdateQuestionMutation()
+
+  useEffect(() => {
+    if (question) {
+      setText(question.text)
+      setOptionA(question.options.find(o => o.key === "A")?.text || "")
+      setOptionB(question.options.find(o => o.key === "B")?.text || "")
+      setOptionC(question.options.find(o => o.key === "C")?.text || "")
+      setOptionD(question.options.find(o => o.key === "D")?.text || "")
+      setCorrectAnswer(question.correctAnswer as "A" | "B" | "C" | "D")
+      setExplanation(question.explanations?.[0]?.content || "")
+    }
+  }, [question])
+
+  const handleUpdate = async () => {
+    if (!question) return
+
+    if (!text.trim() || !optionA.trim() || !optionB.trim() || !optionC.trim() || !optionD.trim()) {
+      toast.error("Please fill question text and all options")
+      return
+    }
+
+    try {
+      await updateQuestion({
+        questionId: question._id,
+        data: {
+          text: text.trim(),
+          options: [
+            { key: "A", text: optionA.trim() },
+            { key: "B", text: optionB.trim() },
+            { key: "C", text: optionC.trim() },
+            { key: "D", text: optionD.trim() },
+          ],
+          correctAnswer,
+          explanation: explanation?.trim() || undefined,
+        },
+      }).unwrap()
+
+      toast.success("Question updated successfully!")
+      onClose()
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to update question")
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Question #{question?.questionNumber}</DialogTitle>
+          <DialogDescription>
+            Update the question details
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div>
+            <Label>Question Text *</Label>
+            <Textarea 
+              value={text} 
+              onChange={(e) => setText(e.target.value)} 
+              placeholder="Enter the question" 
+              rows={4} 
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            {["A", "B", "C", "D"].map((key) => (
+              <div key={key}>
+                <Label>Option {key} *</Label>
+                <Input 
+                  value={key === "A" ? optionA : key === "B" ? optionB : key === "C" ? optionC : optionD} 
+                  onChange={(e) => {
+                    if (key === "A") setOptionA(e.target.value)
+                    else if (key === "B") setOptionB(e.target.value)
+                    else if (key === "C") setOptionC(e.target.value)
+                    else setOptionD(e.target.value)
+                  }} 
+                  placeholder={`Enter option ${key}`} 
+                />
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <Label>Correct Answer *</Label>
+            <Select value={correctAnswer} onValueChange={(value: any) => setCorrectAnswer(value)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {["A", "B", "C", "D"].map((key) => (
+                  <SelectItem key={key} value={key}>Option {key}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Explanation (Optional)</Label>
+            <Textarea 
+              value={explanation} 
+              onChange={(e) => setExplanation(e.target.value)} 
+              placeholder="Brief explanation" 
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button onClick={handleUpdate} disabled={isLoading}>
+            {isLoading ? "Updating..." : "Update Question"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Delete Question Dialog
+function DeleteQuestionDialog({ isOpen, onClose, question }: { isOpen: boolean; onClose: () => void; question: Question | null }) {
+  const [deleteQuestion, { isLoading }] = useDeleteQuestionMutation()
+
+  const handleDelete = async () => {
+    if (!question) return
+
+    try {
+      await deleteQuestion(question._id).unwrap()
+      toast.success("Question deleted successfully!")
+      onClose()
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to delete question")
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Delete Question?</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete Question #{question?.questionNumber}? This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+
+        {question && (
+          <div className="bg-gray-50 border rounded-lg p-3">
+            <p className="text-sm text-gray-700">{question.text.substring(0, 100)}{question.text.length > 100 ? "..." : ""}</p>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} disabled={isLoading} variant="destructive">
+            {isLoading ? "Deleting..." : "Delete Question"}
           </Button>
         </DialogFooter>
       </DialogContent>

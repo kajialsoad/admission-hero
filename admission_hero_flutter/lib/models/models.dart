@@ -9,7 +9,8 @@ class UserModel {
   final String? role;
   final String? avatar;
   final String? subscriptionStatus;
-  final DateTime? subscriptionExpiry;
+  final String? subscriptionType;
+  final DateTime? subscriptionExpireAt;
 
   UserModel({
     required this.id,
@@ -19,7 +20,8 @@ class UserModel {
     this.role,
     this.avatar,
     this.subscriptionStatus,
-    this.subscriptionExpiry,
+    this.subscriptionType,
+    this.subscriptionExpireAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -31,9 +33,12 @@ class UserModel {
       role: json['role'],
       avatar: json['avatar'],
       subscriptionStatus: json['subscriptionStatus'],
-      subscriptionExpiry: json['subscriptionExpiry'] != null
-          ? DateTime.tryParse(json['subscriptionExpiry'])
-          : null,
+      subscriptionType: json['subscriptionType'],
+      subscriptionExpireAt: json['subscriptionExpireAt'] != null
+          ? DateTime.tryParse(json['subscriptionExpireAt'])
+          : (json['subscriptionExpiry'] != null 
+              ? DateTime.tryParse(json['subscriptionExpiry'])
+              : null),
     );
   }
 
@@ -46,11 +51,12 @@ class UserModel {
       'role': role,
       'avatar': avatar,
       'subscriptionStatus': subscriptionStatus,
-      'subscriptionExpiry': subscriptionExpiry?.toIso8601String(),
+      'subscriptionType': subscriptionType,
+      'subscriptionExpireAt': subscriptionExpireAt?.toIso8601String(),
     };
   }
 
-  bool get isSubscribed => subscriptionStatus == 'active';
+  bool get isSubscribed => subscriptionStatus == 'paid';
 }
 
 

@@ -9,7 +9,7 @@ export interface IUser extends Document {
   isVerified: boolean;
   role: 'user' | 'admin';
   subscriptionStatus: 'free' | 'paid';
-  subscriptionType?: '1-month' | '3-month' | '6-month';
+  subscriptionType?: '1-month' | '3-month' | '6-month' | '12-month';
   subscriptionExpireAt?: Date;
   totalScore: number;
   isActive: boolean;
@@ -31,7 +31,7 @@ const UserSchema: Schema = new Schema({
   subscriptionStatus: { type: String, enum: ['free', 'paid'], default: 'free', index: true },
   subscriptionType: {
     type: String,
-    enum: ['1-month', '3-month', '6-month', null], // ← add null to enum
+    enum: ['1-month', '3-month', '6-month', '12-month', null], // ← add 12-month
     default: null
   },
   subscriptionExpireAt: { type: Date, default: null },

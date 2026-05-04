@@ -169,18 +169,23 @@ export const checkSubscription = async (req: Request, res: Response) => {
       });
     }
     
+    // Check if user has paid status and subscription is not expired
+    const hasActiveSubscription = 
+      user.subscriptionStatus === 'paid' && 
+      user.subscriptionExpireAt && 
+      new Date() < user.subscriptionExpireAt;
+    
+    // Also check Subscription collection for additional info
     const subscription = await Subscription.findOne({
       user: userId,
       active: true,
       expireAt: { $gt: new Date() }
     }).sort({ createdAt: -1 });
     
-    const hasActiveSubscription = subscription !== null;
-    
     res.json({
       success: true,
       data: {
-        hasSubscription: hasActiveSubscription,
+        hasSubscription: hasActiveSubscription, // Use user.subscriptionStatus instead
         subscriptionStatus: user.subscriptionStatus,
         subscriptionType: user.subscriptionType,
         expireAt: user.subscriptionExpireAt,

@@ -221,6 +221,12 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
   }
 
   Widget _buildSetCard(QuestionSet set, int index) {
+    // Check if current user has subscription
+    final hasSubscription = context.watch<SubscriptionProvider>().hasSubscription;
+    
+    // Determine badge color and icon based on user's subscription
+    final bool userCanAccess = set.isFree || hasSubscription;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -269,27 +275,43 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Access Type Badge
+                // Access Type Badge - Dynamic based on user subscription
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: set.isFree ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7), 
+                    color: set.isFree 
+                        ? const Color(0xFFDCFCE7) // Free - light green
+                        : userCanAccess 
+                            ? const Color(0xFFDCFCE7) // Paid but user has subscription - light green
+                            : const Color(0xFFFEF3C7), // Paid and user doesn't have subscription - yellow
                     borderRadius: BorderRadius.circular(20)
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        set.isFree ? Icons.check_circle : Icons.lock,
+                        set.isFree 
+                            ? Icons.check_circle 
+                            : userCanAccess 
+                                ? Icons.lock_open // Unlocked for paid users
+                                : Icons.lock, // Locked for free users
                         size: 12,
-                        color: set.isFree ? const Color(0xFF16A34A) : const Color(0xFFCA8A04),
+                        color: set.isFree 
+                            ? const Color(0xFF16A34A) // Green
+                            : userCanAccess 
+                                ? const Color(0xFF16A34A) // Green - user can access
+                                : const Color(0xFFCA8A04), // Yellow - user cannot access
                       ),
                       const SizedBox(width: 4),
                       Text(
                         set.isFree ? 'Free' : 'Paid',
                         style: TextStyle(
                           fontSize: 11, 
-                          color: set.isFree ? const Color(0xFF16A34A) : const Color(0xFFCA8A04), 
+                          color: set.isFree 
+                              ? const Color(0xFF16A34A) 
+                              : userCanAccess 
+                                  ? const Color(0xFF16A34A) // Green text
+                                  : const Color(0xFFCA8A04), // Yellow text
                           fontWeight: FontWeight.w700
                         )
                       ),

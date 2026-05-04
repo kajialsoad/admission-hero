@@ -4,11 +4,15 @@ import { createServer } from 'http';
 import app from './app';
 import connectDB from './config/db';
 import SocketService from './services/socketService';
+import { initSubscriptionExpiryJob } from './jobs/subscriptionExpiry';
 
 const PORT = process.env.PORT || 4000;
 
 async function start() {
   await connectDB();
+  
+  // Initialize subscription expiry job
+  initSubscriptionExpiryJob();
   
   // Create HTTP server
   const server = createServer(app);

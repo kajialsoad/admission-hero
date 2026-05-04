@@ -4,7 +4,8 @@ import {
   createBKashPayment, 
   handleBKashCallback, 
   verifyBKashPayment,
-  verifyGooglePlayPurchase
+  verifyGooglePlayPurchase,
+  fixPaidUsersExpiry
 } from "../controllers/paymentController"
 
 import { protect } from "../middlewares/auth"
@@ -24,5 +25,9 @@ router.get("/bkash/callback", handleBKashCallback)
 // ============ Google Play Billing Routes ============
 // Verify Google Play purchase (requires authentication)
 router.post("/google-play/verify", protect, verifyGooglePlayPurchase)
+
+// ============ Admin/Migration Routes ============
+// Fix paid users without expiry date (PUBLIC for now - should be admin only in production)
+router.post("/fix-paid-users-expiry", fixPaidUsersExpiry)
 
 export default router

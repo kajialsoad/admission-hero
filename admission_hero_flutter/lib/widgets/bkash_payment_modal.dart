@@ -65,10 +65,19 @@ class _BkashPaymentModalState extends State<BkashPaymentModal> {
 
       final url = Uri.parse(response['paymentURL']);
       if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.inAppWebView);
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+        
+        // Start polling for payment status
         setState(() {
           _step = 'confirm';
           _isLoading = false;
+        });
+        
+        // Auto-check payment status after 5 seconds
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted && _step == 'confirm') {
+            _checkPaymentStatus();
+          }
         });
       } else {
         throw Exception('Could not open browser');
@@ -81,6 +90,35 @@ class _BkashPaymentModalState extends State<BkashPaymentModal> {
         _step = 'init';
         _isLoading = false;
       });
+    }
+  }
+
+  // Auto-check payment status
+  Future<void> _checkPaymentStatus() async {
+    if (_paymentID == null || !mounted) return;
+
+    try {
+      final response = await ApiService.executeSubscriptionPayment({'paymentID': _paymentID});
+      
+      if (response != null && response['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Payment Successful! Subscription Activated!'),
+              backgroundColor: AppColors.success,
+              duration: Duration(seconds: 3),
+            )
+          );
+          Navigator.pop(context);
+          widget.onSuccess();
+        }
+      } else {
+        // Payment not completed yet, keep showing confirm button
+        print('Payment not completed yet. User can manually confirm.');
+      }
+    } catch (e) {
+      print('Auto-check payment status error: $e');
+      // Don't show error, let user manually confirm
     }
   }
 
@@ -206,18 +244,38 @@ class _BkashPaymentModalState extends State<BkashPaymentModal> {
                       ),
 
                     if (_step == 'confirm')
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
                         child: Column(
                           children: [
-                            Icon(Icons.check_circle, size: 48, color: AppColors.success),
-                            SizedBox(height: 12),
-                            Text('Payment in Progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            SizedBox(height: 8),
-                            Text(
-                              'After completing payment in bKash, tap "Confirm Payment"',
+                            const Icon(Icons.payment, size: 48, color: AppColors.primary),
+                            const SizedBox(height: 12),
+                            const Text('Complete Payment in bKash', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'After completing payment in bKash app/browser, return here and tap "I\'ve Paid" button below.',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: AppColors.textSecondary),
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryBg,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.info_outline, size: 20, color: AppColors.primary),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'We will automatically verify your payment',
+                                      style: TextStyle(fontSize: 12, color: AppColors.primary),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -237,13 +295,33 @@ class _BkashPaymentModalState extends State<BkashPaymentModal> {
                     ? ElevatedButton(
                         onPressed: _handleStartPayment,
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, padding: const EdgeInsets.symmetric(vertical: 16)),
-                        child: Text('Pay ${widget.amount} Tk'),
+                        child: Text('Pay ${widget.amount} Tk with bKash'),
                       )
                     : _step == 'confirm'
                         ? ElevatedButton(
-                            onPressed: _handleConfirmPayment,
-                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success, padding: const EdgeInsets.symmetric(vertical: 16)),
-                            child: const Text('Confirm Payment'),
+                            onPressed: _isLoading ? null : _handleConfirmPayment,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.success, 
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              disabledBackgroundColor: AppColors.success.withOpacity(0.5),
+                            ),
+                            child: _isLoading 
+                                ? const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        ),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text('Verifying Payment...'),
+                                    ],
+                                  )
+                                : const Text('I\'ve Paid - Verify Now'),
                           )
                         : const SizedBox.shrink(),
               ),

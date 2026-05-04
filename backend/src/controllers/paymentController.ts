@@ -157,11 +157,60 @@ export const handleBKashCallback = async (req: Request, res: Response) => {
     if (status && status.toLowerCase() !== "success") {
       // Update payment status to failed
       await Payment.updateOne({ paymentID }, { status: 'failed' });
-      return res.redirect(`${DEFAULT_FRONTEND}/(tabs)/subscription?status=failed&reason=user_cancelled`)
+      
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Payment Failed</title>
+          <style>
+            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f5f5; }
+            .container { text-align: center; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 400px; }
+            .icon { font-size: 64px; margin-bottom: 20px; }
+            h1 { color: #e53e3e; margin: 0 0 10px 0; font-size: 24px; }
+            p { color: #666; margin: 0 0 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">❌</div>
+            <h1>Payment Failed</h1>
+            <p>Your payment was cancelled or failed. Please try again.</p>
+            <p style="font-size: 12px; color: #999;">You can close this window and return to the app.</p>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     if (!paymentID) {
-      return res.redirect(`${DEFAULT_FRONTEND}/(tabs)/subscription?status=failed&reason=missing_payment_id`)
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Payment Error</title>
+          <style>
+            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f5f5; }
+            .container { text-align: center; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 400px; }
+            .icon { font-size: 64px; margin-bottom: 20px; }
+            h1 { color: #e53e3e; margin: 0 0 10px 0; font-size: 24px; }
+            p { color: #666; margin: 0 0 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">⚠️</div>
+            <h1>Payment Error</h1>
+            <p>Payment ID is missing. Please contact support.</p>
+            <p style="font-size: 12px; color: #999;">You can close this window and return to the app.</p>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     const executeResponse: any = await bkashService.executePayment(paymentID)
@@ -173,22 +222,79 @@ export const handleBKashCallback = async (req: Request, res: Response) => {
       executeResponse.transactionID ||
       ""
 
-    // Update subscription
-    const subscription = await Subscription.findOneAndUpdate(
-      { paymentID },
-      {
-        active: true,
-        transactionID: transactionId,
-        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-      { new: true }
-    )
+    // Get subscription to find duration
+    const subscription = await Subscription.findOne({ paymentID })
+    
+    if (!subscription) {
+      await Payment.updateOne({ paymentID }, { status: 'failed' });
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Subscription Not Found</title>
+          <style>
+            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f5f5; }
+            .container { text-align: center; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 400px; }
+            .icon { font-size: 64px; margin-bottom: 20px; }
+            h1 { color: #e53e3e; margin: 0 0 10px 0; font-size: 24px; }
+            p { color: #666; margin: 0 0 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">⚠️</div>
+            <h1>Subscription Not Found</h1>
+            <p>Could not find subscription record. Please contact support.</p>
+            <p style="font-size: 12px; color: #999;">Payment ID: ${paymentID}</p>
+            <p style="font-size: 12px; color: #999;">You can close this window and return to the app.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    // Calculate expiry date based on package duration
+    const durationDays = subscription.duration || 30; // Default to 30 if not set
+    const expireAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+    
+    console.log(`Setting subscription expiry: ${durationDays} days from now (${expireAt})`);
+
+    // Update subscription with dynamic expiry
+    subscription.active = true;
+    subscription.transactionID = transactionId;
+    subscription.expireAt = expireAt;
+    await subscription.save();
 
     if (!subscription) {
       await Payment.updateOne({ paymentID }, { status: 'failed' });
-      return res.redirect(
-        `${DEFAULT_FRONTEND}/(tabs)/subscription?status=failed&reason=subscription_not_found`
-      )
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Subscription Not Found</title>
+          <style>
+            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f5f5; }
+            .container { text-align: center; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 400px; }
+            .icon { font-size: 64px; margin-bottom: 20px; }
+            h1 { color: #e53e3e; margin: 0 0 10px 0; font-size: 24px; }
+            p { color: #666; margin: 0 0 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">⚠️</div>
+            <h1>Subscription Not Found</h1>
+            <p>Could not find subscription record. Please contact support.</p>
+            <p style="font-size: 12px; color: #999;">Payment ID: ${paymentID}</p>
+            <p style="font-size: 12px; color: #999;">You can close this window and return to the app.</p>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     // Update payment status
@@ -209,21 +315,107 @@ export const handleBKashCallback = async (req: Request, res: Response) => {
       );
     }
 
+    // Determine subscription type based on duration
+    let subscriptionType = '1-month'; // default
+    const subDurationDays = subscription.duration || 30;
+    
+    if (subDurationDays >= 365) {
+      subscriptionType = '12-month';
+    } else if (subDurationDays >= 180) {
+      subscriptionType = '6-month';
+    } else if (subDurationDays >= 90) {
+      subscriptionType = '3-month';
+    } else if (subDurationDays >= 30) {
+      subscriptionType = '1-month';
+    }
+    
+    console.log(`Setting subscription type: ${subscriptionType} (${subDurationDays} days)`);
+
     // Update user subscription status
     await User.findByIdAndUpdate(subscription.user, {
       subscriptionStatus: 'paid',
-      subscriptionType: subscription.duration === 90 ? '3-month' : subscription.duration === 180 ? '6-month' : '12-month',
+      subscriptionType: subscriptionType,
       subscriptionExpireAt: subscription.expireAt
     })
 
     console.log("Subscription Activated and User Updated:", subscription._id)
 
-    return res.redirect(
-      `${DEFAULT_FRONTEND}/(tabs)/subscription?status=success&transactionId=${transactionId}`
-    )
+    // Return success HTML page for Flutter
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Payment Successful</title>
+        <style>
+          body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+          .container { text-align: center; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 400px; }
+          .icon { font-size: 80px; margin-bottom: 20px; animation: bounce 1s ease; }
+          @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+          h1 { color: #48bb78; margin: 0 0 10px 0; font-size: 28px; }
+          p { color: #666; margin: 0 0 10px 0; line-height: 1.6; }
+          .transaction { background: #f7fafc; padding: 12px; border-radius: 6px; margin: 20px 0; font-size: 12px; color: #718096; }
+          .btn { display: inline-block; padding: 14px 28px; background: #48bb78; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; transition: background 0.3s; }
+          .btn:hover { background: #38a169; }
+          .info { font-size: 13px; color: #999; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="icon">✅</div>
+          <h1>Payment Successful!</h1>
+          <p>Your subscription has been activated successfully.</p>
+          <p style="font-weight: bold; color: #48bb78;">Welcome to Premium!</p>
+          
+          <div class="transaction">
+            <strong>Transaction ID:</strong><br>
+            ${transactionId || 'N/A'}
+          </div>
+          
+          <p class="info">
+            You can now close this window and return to the app to enjoy premium features.
+          </p>
+          
+          <a href="#" onclick="window.close(); return false;" class="btn">Close Window</a>
+        </div>
+        
+        <script>
+          // Auto-close after 5 seconds
+          setTimeout(() => {
+            window.close();
+          }, 5000);
+        </script>
+      </body>
+      </html>
+    `);
   } catch (error) {
     console.error("Callback Error:", error)
-    return res.redirect(`${DEFAULT_FRONTEND}/(tabs)/subscription?status=failed&reason=server_error`)
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Server Error</title>
+        <style>
+          body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f5f5; }
+          .container { text-align: center; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 400px; }
+          .icon { font-size: 64px; margin-bottom: 20px; }
+          h1 { color: #e53e3e; margin: 0 0 10px 0; font-size: 24px; }
+          p { color: #666; margin: 0 0 20px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="icon">⚠️</div>
+          <h1>Server Error</h1>
+          <p>An error occurred while processing your payment. Please contact support.</p>
+          <p style="font-size: 12px; color: #999;">You can close this window and return to the app.</p>
+        </div>
+      </body>
+      </html>
+    `);
   }
 }
 
@@ -266,28 +458,47 @@ export const verifyBKashPayment = async (req: Request, res: Response) => {
       })
     }
 
-    // Update subscription
-    const subscription = await Subscription.findOneAndUpdate(
-      { paymentID, user: userId },
-      {
-        active: true,
-        transactionID,
-        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-      { new: true },
-    )
+    // Get subscription first to get duration
+    const subscription = await Subscription.findOne({ paymentID, user: userId })
 
     if (!subscription) {
       console.error("Subscription not found for user and payment ID")
       return res.status(404).json({ success: false, message: "Subscription not found" })
     }
 
+    // Calculate expiry date based on package duration
+    const durationDays = subscription.duration || 30;
+    const expireAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+    
+    console.log(`Verify: Setting subscription expiry: ${durationDays} days from now (${expireAt})`);
+
+    // Update subscription
+    subscription.active = true;
+    subscription.transactionID = transactionID;
+    subscription.expireAt = expireAt;
+    await subscription.save();
+
+    // Determine subscription type based on duration
+    let subscriptionType = '1-month';
+    
+    if (durationDays >= 365) {
+      subscriptionType = '12-month';
+    } else if (durationDays >= 180) {
+      subscriptionType = '6-month';
+    } else if (durationDays >= 90) {
+      subscriptionType = '3-month';
+    } else if (durationDays >= 30) {
+      subscriptionType = '1-month';
+    }
+    
+    console.log(`Verify: Setting subscription type: ${subscriptionType} (${durationDays} days)`);
+
     // ✅ UPDATE USER SUBSCRIPTION STATUS
     const User = require('../models/User').default
     await User.findByIdAndUpdate(userId, {
       subscriptionStatus: 'paid',
-      subscriptionType: subscription.duration === 1 ? '1-month' : subscription.duration === 3 ? '3-month' : '6-month',
-      subscriptionExpireAt: subscription.expireAt
+      subscriptionType: subscriptionType,
+      subscriptionExpireAt: expireAt
     })
 
     console.log("Payment verified successfully and user updated:", transactionID)
@@ -306,6 +517,93 @@ export const verifyBKashPayment = async (req: Request, res: Response) => {
 
 
 // ============ Google Play Billing ============
+
+// Fix existing paid users without expiry date (Admin only)
+export const fixPaidUsersExpiry = async (req: Request, res: Response) => {
+  try {
+    // Find all paid users without expiry date
+    const usersToFix = await User.find({
+      subscriptionStatus: 'paid',
+      $or: [
+        { subscriptionExpireAt: null },
+        { subscriptionExpireAt: { $exists: false } }
+      ]
+    });
+
+    console.log(`Found ${usersToFix.length} paid users without expiry date`);
+
+    const results = [];
+
+    for (const user of usersToFix) {
+      // Find their most recent active subscription
+      const subscription = await Subscription.findOne({
+        user: user._id,
+        active: true
+      }).sort({ createdAt: -1 });
+
+      if (subscription && subscription.expireAt) {
+        // Update user with subscription expiry
+        await User.findByIdAndUpdate(user._id, {
+          subscriptionExpireAt: subscription.expireAt
+        });
+
+        results.push({
+          userId: user._id,
+          email: user.email,
+          phone: user.phone,
+          subscriptionType: user.subscriptionType,
+          expireAt: subscription.expireAt,
+          status: 'fixed'
+        });
+
+        console.log(`Fixed user ${user._id}: set expiry to ${subscription.expireAt}`);
+      } else {
+        // No subscription found or no expiry, calculate based on subscription type
+        let durationDays = 30; // default
+        
+        if (user.subscriptionType === '12-month') {
+          durationDays = 365;
+        } else if (user.subscriptionType === '6-month') {
+          durationDays = 180;
+        } else if (user.subscriptionType === '3-month') {
+          durationDays = 90;
+        } else if (user.subscriptionType === '1-month') {
+          durationDays = 30;
+        }
+
+        const expireAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+
+        await User.findByIdAndUpdate(user._id, {
+          subscriptionExpireAt: expireAt
+        });
+
+        results.push({
+          userId: user._id,
+          email: user.email,
+          phone: user.phone,
+          subscriptionType: user.subscriptionType,
+          expireAt: expireAt,
+          status: 'calculated'
+        });
+
+        console.log(`Calculated expiry for user ${user._id}: ${expireAt} (${durationDays} days)`);
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: `Fixed ${results.length} users`,
+      results
+    });
+
+  } catch (error: any) {
+    console.error("Fix paid users error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fix paid users"
+    });
+  }
+};
 
 export const verifyGooglePlayPurchase = async (req: Request, res: Response) => {
   try {

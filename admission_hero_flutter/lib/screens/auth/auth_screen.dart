@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/subscription_provider.dart';
 import '../../theme/app_theme.dart';
 import 'forgot_password_screen.dart';
 
@@ -75,6 +76,13 @@ class _AuthScreenState extends State<AuthScreen>
     setState(() => _isLoading = true);
     final auth = context.read<AuthProvider>();
     final success = await auth.login(email, pass);
+    
+    // Check subscription status after successful login
+    if (success && mounted) {
+      final subscriptionProvider = context.read<SubscriptionProvider>();
+      await subscriptionProvider.checkSubscriptionStatus();
+    }
+    
     setState(() => _isLoading = false);
 
     if (!mounted) return;
