@@ -176,6 +176,18 @@ analyze_output.txt
 # Graphify output
 graphify-out/
 
+# Markdown files
+*.md
+**/*.md
+
+# Script files
+*.sh
+*.bat
+*.ps1
+**/*.sh
+**/*.bat
+**/*.ps1
+
 # Package Lock Files (optional - uncomment if needed)
 # package-lock.json
 # **/package-lock.json
