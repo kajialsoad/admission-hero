@@ -47,9 +47,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () => Navigator.pushNamed(context, '/support')),
       _MenuItem(id: 'settings', title: 'Settings', icon: Icons.settings_outlined, 
           onTap: () => Navigator.pushNamed(context, '/settings')),
-      if (user != null) // Only show for logged in users
-        _MenuItem(id: 'feature-test', title: 'Feature Tests', icon: Icons.bug_report_outlined, 
-            onTap: () => Navigator.pushNamed(context, '/feature-test')),
+      // Feature Tests - Hidden for production
+      // if (user != null) // Only show for logged in users
+      //   _MenuItem(id: 'feature-test', title: 'Feature Tests', icon: Icons.bug_report_outlined, 
+      //       onTap: () => Navigator.pushNamed(context, '/feature-test')),
     ];
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
