@@ -41,12 +41,12 @@ class BottomNav extends StatelessWidget {
                 },
               ),
               _NavItem(
-                icon: Icons.card_membership_outlined,
-                activeIcon: Icons.card_membership,
-                label: 'Subscribe',
+                icon: Icons.insights_outlined,
+                activeIcon: Icons.insights,
+                label: 'My Performance',
                 isActive: currentIndex == 2,
                 onTap: () {
-                  if (currentIndex != 2) Navigator.pushNamed(context, '/subscription');
+                  if (currentIndex != 2) Navigator.pushNamed(context, '/performance');
                 },
               ),
               _NavItem(
