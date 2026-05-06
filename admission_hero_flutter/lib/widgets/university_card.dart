@@ -95,7 +95,7 @@ class UniversityCard extends StatelessWidget {
                             children: [
                               const Icon(Icons.lock, size: 10, color: Color(0xFFCA8A04)),
                               const SizedBox(width: 3),
-                              Text('${university.paidQuestionSetsCount} Paid',
+                              Text('${university.paidQuestionSetsCount} Premium',
                                   style: const TextStyle(fontSize: 11, color: Color(0xFFCA8A04), fontWeight: FontWeight.w600)),
                             ],
                           ),

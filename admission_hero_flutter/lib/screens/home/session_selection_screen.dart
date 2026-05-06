@@ -302,7 +302,7 @@ class _SessionSelectionScreenState extends State<SessionSelectionScreen> {
                           children: [
                             const Icon(Icons.lock, size: 10, color: Color(0xFFCA8A04)),
                             const SizedBox(width: 3),
-                            Text('$paidSets Paid',
+                            Text('$paidSets Premium',
                                 style: const TextStyle(fontSize: 11, color: Color(0xFFCA8A04), fontWeight: FontWeight.w600)),
                           ],
                         ),

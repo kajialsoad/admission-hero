@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+﻿import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
@@ -8,7 +8,7 @@ export interface IUser extends Document {
   password?: string;
   isVerified: boolean;
   role: 'user' | 'admin';
-  subscriptionStatus: 'free' | 'paid';
+  subscriptionStatus: 'free' | 'Premium';
   subscriptionType?: '1-month' | '3-month' | '6-month' | '12-month';
   subscriptionExpireAt?: Date;
   totalScore: number;
@@ -28,7 +28,7 @@ const UserSchema: Schema = new Schema({
   password: { type: String },
   isVerified: { type: Boolean, default: false },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  subscriptionStatus: { type: String, enum: ['free', 'paid'], default: 'free', index: true },
+  subscriptionStatus: { type: String, enum: ['free', 'Premium'], default: 'free', index: true },
   subscriptionType: {
     type: String,
     enum: ['1-month', '3-month', '6-month', '12-month', null], // ← add 12-month

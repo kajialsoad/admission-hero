@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/auth_provider.dart';
@@ -253,7 +253,7 @@ class _BkashPaymentModalState extends State<BkashPaymentModal> {
                             const Text('Complete Payment in bKash', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                             const SizedBox(height: 8),
                             const Text(
-                              'After completing payment in bKash app/browser, return here and tap "I\'ve Paid" button below.',
+                              'After completing payment in bKash app/browser, return here and tap "I\'ve Premium" button below.',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: AppColors.textSecondary),
                             ),
@@ -321,7 +321,7 @@ class _BkashPaymentModalState extends State<BkashPaymentModal> {
                                       Text('Verifying Payment...'),
                                     ],
                                   )
-                                : const Text('I\'ve Paid - Verify Now'),
+                                : const Text('I\'ve Premium - Verify Now'),
                           )
                         : const SizedBox.shrink(),
               ),

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { protect, adminOnly } from '../middlewares/auth';
 import User from '../models/User';
 const router = Router();
@@ -38,8 +38,8 @@ router.get('/', protect, adminOnly, async (req: any, res) => {
     // Subscription filter
     if (subscriptionFilter === 'free') {
       query.subscriptionStatus = 'free';
-    } else if (subscriptionFilter === 'paid') {
-      query.subscriptionStatus = 'paid';
+    } else if (subscriptionFilter === 'Premium') {
+      query.subscriptionStatus = 'Premium';
     }
 
     const total = await User.countDocuments(query);
@@ -92,8 +92,8 @@ router.put('/:id/subscription', protect, adminOnly, async (req: any, res) => {
     
     const updateData: any = {
       subscriptionStatus,
-      subscriptionType: subscriptionStatus === 'paid' ? subscriptionType : null,
-      subscriptionExpireAt: subscriptionStatus === 'paid' ? subscriptionExpireAt : null
+      subscriptionType: subscriptionStatus === 'Premium' ? subscriptionType : null,
+      subscriptionExpireAt: subscriptionStatus === 'Premium' ? subscriptionExpireAt : null
     };
 
     const user = await User.findByIdAndUpdate(

@@ -1,4 +1,4 @@
-import { adminApiSlice } from "./adminApiSlice"
+﻿import { adminApiSlice } from "./adminApiSlice"
 
 export interface AdminUser {
   _id: string
@@ -7,7 +7,7 @@ export interface AdminUser {
   email?: string
   role: "user" | "admin"
   isActive: boolean
-  subscriptionStatus: "free" | "paid"
+  subscriptionStatus: "free" | "Premium"
   subscriptionType?: "1-month" | "3-month" | "6-month"
   subscriptionExpireAt?: string
   createdAt: string
@@ -19,7 +19,7 @@ export interface AdminUsersQuery {
   limit?: number
   search?: string
   status?: string
-  subscriptionFilter?: "all" | "free" | "paid"
+  subscriptionFilter?: "all" | "free" | "Premium"
   sortBy?: "newest" | "expiring"
 }
 
@@ -42,7 +42,7 @@ export interface UpdateUserStatusRequest {
 
 export interface UpdateSubscriptionRequest {
   id: string
-  subscriptionStatus: "free" | "paid"
+  subscriptionStatus: "free" | "Premium"
   subscriptionType?: "1-month" | "3-month" | "6-month"
   subscriptionExpireAt?: string
 }

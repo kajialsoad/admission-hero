@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
@@ -642,9 +642,9 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              // Check if selected package is already paid
+                              // Check if selected package is already Premium
                               final user = context.read<AuthProvider>().user;
-                              final hasSelectedPackage = user?.subscriptionStatus == 'paid' && 
+                              final hasSelectedPackage = user?.subscriptionStatus == 'Premium' && 
                                                          user?.subscriptionType != null &&
                                                          provider.selectedPackage != null &&
                                                          _isMatchingPackage(user!.subscriptionType!, provider.selectedPackage!.type);
@@ -682,13 +682,13 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
                                         return 'No Payment Methods Available';
                                       }
                                       
-                                      // Check if selected package is already paid
+                                      // Check if selected package is already Premium
                                       final user = context.read<AuthProvider>().user;
                                       if (provider.selectedPackage != null &&
-                                          user?.subscriptionStatus == 'paid' && 
+                                          user?.subscriptionStatus == 'Premium' && 
                                           user?.subscriptionType != null &&
                                           _isMatchingPackage(user!.subscriptionType!, provider.selectedPackage!.type)) {
-                                        return 'Already Paid - Select Another Package';
+                                        return 'Already Premium - Select Another Package';
                                       }
                                       
                                       return 'Pay Now';
@@ -721,7 +721,7 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
     
     // Check if user already has this package type
     final user = context.read<AuthProvider>().user;
-    final hasThisPackage = user?.subscriptionStatus == 'paid' && 
+    final hasThisPackage = user?.subscriptionStatus == 'Premium' && 
                            user?.subscriptionType != null &&
                            _isMatchingPackage(user!.subscriptionType!, package.type);
     
@@ -817,7 +817,7 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
                             border: Border.all(color: AppColors.success),
                           ),
                           child: const Text(
-                            'Already Paid',
+                            'Already Premium',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,

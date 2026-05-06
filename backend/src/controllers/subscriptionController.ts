@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+﻿import type { Request, Response } from 'express';
 import Package from '../models/Package';
 import PromoCode from '../models/PromoCode';
 import Subscription from '../models/Subscription';
@@ -169,9 +169,9 @@ export const checkSubscription = async (req: Request, res: Response) => {
       });
     }
     
-    // Check if user has paid status and subscription is not expired
+    // Check if user has Premium status and subscription is not expired
     const hasActiveSubscription = 
-      user.subscriptionStatus === 'paid' && 
+      user.subscriptionStatus === 'Premium' && 
       user.subscriptionExpireAt && 
       new Date() < user.subscriptionExpireAt;
     

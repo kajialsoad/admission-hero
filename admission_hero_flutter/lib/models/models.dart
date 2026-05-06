@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 // ─── User Model ────────────────────────────────────────────────────────────────
 class UserModel {
@@ -56,7 +56,7 @@ class UserModel {
     };
   }
 
-  bool get isSubscribed => subscriptionStatus == 'paid';
+  bool get isSubscribed => subscriptionStatus == 'Premium';
 }
 
 
@@ -229,7 +229,7 @@ class QuestionSet {
   final int totalQuestions;
   final String? description;
   final String? videoUrl;
-  final String accessType; // New field: 'free' or 'paid'
+  final String accessType; // New field: 'free' or 'Premium'
   final List<Question>? questions;
   final DateTime createdAt;
 
@@ -242,7 +242,7 @@ class QuestionSet {
     required this.totalQuestions,
     this.description,
     this.videoUrl,
-    this.accessType = 'paid', // Default to paid
+    this.accessType = 'Premium', // Default to Premium
     this.questions,
     required this.createdAt,
   });
@@ -252,7 +252,7 @@ class QuestionSet {
 
   int get durationInMinutes => (totalQuestions * 45) ~/ 60;
   
-  bool get isPaid => accessType == 'paid';
+  bool get isPaid => accessType == 'Premium';
   bool get isFree => accessType == 'free';
 
   factory QuestionSet.fromJson(Map<String, dynamic> json) {
@@ -265,7 +265,7 @@ class QuestionSet {
       totalQuestions: json['totalQuestions'] ?? 0,
       description: json['description'],
       videoUrl: json['videoUrl'],
-      accessType: json['accessType'] ?? 'paid', // Default to paid if not specified
+      accessType: json['accessType'] ?? 'Premium', // Default to Premium if not specified
       questions: json['questions'] != null
           ? (json['questions'] as List).map((q) => Question.fromJson(q)).toList()
           : null,

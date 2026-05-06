@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import type React from "react"
 import { useState, useEffect } from "react"
@@ -256,7 +256,7 @@ export default function QuestionSetManagement() {
                         </div>
                       ) : (
                         <div className="inline-flex items-center px-2 py-1 rounded text-sm font-medium bg-orange-100 text-orange-700">
-                          🔒 Paid
+                          🔒 Premium
                         </div>
                       )}
                     </td>
@@ -349,7 +349,7 @@ function ManualCreateDialog({ isOpen, onClose, universities }: any) {
   const [selectedUniversity, setSelectedUniversity] = useState("")
   const [selectedUnit, setSelectedUnit] = useState("")
   const [selectedSession, setSelectedSession] = useState("")
-  const [accessType, setAccessType] = useState<"free" | "paid">("paid") // New field
+  const [accessType, setAccessType] = useState<"free" | "Premium">("Premium") // New field
   const [questions, setQuestions] = useState<MCQQuestion[]>([])
   const [currentQuestion, setCurrentQuestion] = useState<MCQQuestion>({
     questionNumber: 1,
@@ -371,7 +371,7 @@ function ManualCreateDialog({ isOpen, onClose, universities }: any) {
     setSelectedUniversity("")
     setSelectedUnit("")
     setSelectedSession("")
-    setAccessType("paid")
+    setAccessType("Premium")
     setQuestions([])
     setCurrentQuestion({ questionNumber: 1, text: "", optionA: "", optionB: "", optionC: "", optionD: "", correctAnswer: "A", explanation: "" })
   }
@@ -506,11 +506,11 @@ function ManualCreateDialog({ isOpen, onClose, universities }: any) {
             </div>
             <div>
               <Label>Access Type *</Label>
-              <Select value={accessType} onValueChange={(value: "free" | "paid") => setAccessType(value)}>
+              <Select value={accessType} onValueChange={(value: "free" | "Premium") => setAccessType(value)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="free">✅ Free (No payment required)</SelectItem>
-                  <SelectItem value="paid">🔒 Paid (Requires subscription)</SelectItem>
+                  <SelectItem value="Premium">🔒 Premium (Requires subscription)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -628,7 +628,7 @@ function CSVUploadDialog({ isOpen, onClose, universities }: any) {
   const [selectedUniversity, setSelectedUniversity] = useState("")
   const [selectedUnit, setSelectedUnit] = useState("")
   const [selectedSession, setSelectedSession] = useState("")
-  const [accessType, setAccessType] = useState<"free" | "paid">("paid") // New field
+  const [accessType, setAccessType] = useState<"free" | "Premium">("Premium") // New field
   const [filePreview, setFilePreview] = useState("")
 
   const [createQuestionSet, { isLoading }] = useCreateQuestionSetMutation()
@@ -641,7 +641,7 @@ function CSVUploadDialog({ isOpen, onClose, universities }: any) {
     setSelectedUniversity("")
     setSelectedUnit("")
     setSelectedSession("")
-    setAccessType("paid")
+    setAccessType("Premium")
     setFilePreview("")
   }
 
@@ -883,11 +883,11 @@ function CSVUploadDialog({ isOpen, onClose, universities }: any) {
 
           <div>
             <Label>Access Type *</Label>
-            <Select value={accessType} onValueChange={(value: "free" | "paid") => setAccessType(value)}>
+            <Select value={accessType} onValueChange={(value: "free" | "Premium") => setAccessType(value)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="free">✅ Free (No payment required)</SelectItem>
-                <SelectItem value="paid">🔒 Paid (Requires subscription)</SelectItem>
+                <SelectItem value="Premium">🔒 Premium (Requires subscription)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1061,13 +1061,13 @@ function ViewQuestionsDialog({ isOpen, onClose, questionSet }: any) {
 
 // Edit Access Type Dialog
 function EditAccessTypeDialog({ isOpen, onClose, questionSet }: any) {
-  const [accessType, setAccessType] = useState<"free" | "paid">("paid")
+  const [accessType, setAccessType] = useState<"free" | "Premium">("Premium")
   const [updateQuestionSet, { isLoading }] = useUpdateQuestionSetMutation()
 
   // Set initial value when questionSet changes
   useEffect(() => {
     if (questionSet) {
-      setAccessType(questionSet.accessType || "paid")
+      setAccessType(questionSet.accessType || "Premium")
     }
   }, [questionSet])
 
@@ -1093,7 +1093,7 @@ function EditAccessTypeDialog({ isOpen, onClose, questionSet }: any) {
         <DialogHeader>
           <DialogTitle>Edit Access Type</DialogTitle>
           <DialogDescription>
-            Change whether this question set is free or requires a paid subscription
+            Change whether this question set is free or requires a Premium subscription
           </DialogDescription>
         </DialogHeader>
 
@@ -1107,7 +1107,7 @@ function EditAccessTypeDialog({ isOpen, onClose, questionSet }: any) {
 
           <div className="space-y-2">
             <Label>Access Type</Label>
-            <Select value={accessType} onValueChange={(value: "free" | "paid") => setAccessType(value)}>
+            <Select value={accessType} onValueChange={(value: "free" | "Premium") => setAccessType(value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -1118,10 +1118,10 @@ function EditAccessTypeDialog({ isOpen, onClose, questionSet }: any) {
                     <span>Free - No payment required</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="paid">
+                <SelectItem value="Premium">
                   <div className="flex items-center gap-2">
                     <span className="text-orange-600">🔒</span>
-                    <span>Paid - Requires subscription</span>
+                    <span>Premium - Requires subscription</span>
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -1130,7 +1130,7 @@ function EditAccessTypeDialog({ isOpen, onClose, questionSet }: any) {
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-800">
-              <strong>Note:</strong> Changing to "Paid" will require users to have an active subscription to access this content.
+              <strong>Note:</strong> Changing to "Premium" will require users to have an active subscription to access this content.
             </p>
           </div>
         </div>

@@ -1,4 +1,4 @@
-// middlewares/auth.ts
+﻿// middlewares/auth.ts
 import type { Request, Response, NextFunction } from "express"
 import jwt from "jsonwebtoken"
 import User from "../models/User"
@@ -84,12 +84,12 @@ export const checkSubscription = (req: Request, res: Response, next: NextFunctio
     })
   }
 
-  if (req.user.subscriptionStatus !== 'paid') {
+  if (req.user.subscriptionStatus !== 'Premium') {
     return res.status(403).json({ 
       error: "Premium subscription required",
       code: "SUBSCRIPTION_REQUIRED",
       subscriptionStatus: req.user.subscriptionStatus,
-      message: "Only paid members can access this feature"
+      message: "Only Premium members can access this feature"
     })
   }
 

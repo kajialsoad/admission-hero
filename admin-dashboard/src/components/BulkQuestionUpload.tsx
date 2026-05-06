@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import type React from "react"
 import { useState } from "react"
@@ -48,7 +48,7 @@ export function BulkQuestionSetUpload({ isOpen, onClose }: BulkQuestionSetUpload
   const [filePreview, setFilePreview] = useState<string>("")
   const [parsedQuestions, setParsedQuestions] = useState<BulkQuestion[]>([])
   const [description, setDescription] = useState("")
-  const [accessType, setAccessType] = useState<"free" | "paid">("paid") // New field
+  const [accessType, setAccessType] = useState<"free" | "Premium">("Premium") // New field
 
   const { data: universitiesData } = useGetUniversitiesQuery({})
   const [createSet, { isLoading: isCreating }] = useCreateQuestionSetMutation()
@@ -158,7 +158,7 @@ export function BulkQuestionSetUpload({ isOpen, onClose }: BulkQuestionSetUpload
     setFilePreview("")
     setParsedQuestions([])
     setDescription("")
-    setAccessType("paid")
+    setAccessType("Premium")
     onClose()
   }
 
@@ -257,13 +257,13 @@ export function BulkQuestionSetUpload({ isOpen, onClose }: BulkQuestionSetUpload
 
             <div>
               <Label htmlFor="accessType">Access Type *</Label>
-              <Select value={accessType} onValueChange={(value: "free" | "paid") => setAccessType(value)}>
+              <Select value={accessType} onValueChange={(value: "free" | "Premium") => setAccessType(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="free">✅ Free (No payment required)</SelectItem>
-                  <SelectItem value="paid">🔒 Paid (Requires subscription)</SelectItem>
+                  <SelectItem value="Premium">🔒 Premium (Requires subscription)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

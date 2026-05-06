@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -7,8 +7,22 @@ import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
 import 'package:intl/intl.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Auto-refresh user data when profile screen is opened
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().refreshUser();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,9 +62,27 @@ class ProfileScreen extends StatelessWidget {
             Container(
               color: AppColors.primary,
               padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 12, left: 20, right: 20, bottom: 16),
-              child: const Row(children: [
-                Text('Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
-              ]),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    onPressed: () async {
+                      await context.read<AuthProvider>().refreshUser();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile refreshed'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      }
+                    },
+                    tooltip: 'Refresh',
+                  ),
+                ],
+              ),
             ),
 
             Expanded(
@@ -86,7 +118,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(user?.email ?? user?.phone ?? 'Not logged in',
                             style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
-                        if (user?.subscriptionStatus == 'paid') ...[
+                        if (user?.subscriptionStatus == 'Premium') ...[
                           const SizedBox(height: 10),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -104,8 +136,8 @@ class ProfileScreen extends StatelessWidget {
                       ]),
                     ),
 
-                    // Subscription Info Card (if paid user)
-                    if (user?.subscriptionStatus == 'paid' && user?.subscriptionExpireAt != null)
+                    // Subscription Info Card (if Premium user)
+                    if (user?.subscriptionStatus == 'Premium' && user?.subscriptionExpireAt != null)
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16),
                         padding: const EdgeInsets.all(20),

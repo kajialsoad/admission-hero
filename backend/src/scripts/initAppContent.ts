@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+﻿import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import AppContent from '../models/AppContent';
 
@@ -159,7 +159,7 @@ const defaultContents = [
 <ul>
   <li>Cancellation takes effect at the end of the current billing period</li>
   <li>No refund for the remaining period</li>
-  <li>Access continues until the end of the paid period</li>
+  <li>Access continues until the end of the Premium period</li>
 </ul>
 
 <h2>6. Contact Us</h2>

@@ -24,9 +24,6 @@ class AuthProvider extends ChangeNotifier {
   // ── Initialize (restore session) ──────────────────────────────────────────
   Future<void> initialize() async {
     try {
-      _isLoading = true;
-      notifyListeners();
-
       final token = await StorageService.getToken();
       final user = await StorageService.getUser();
 
@@ -34,9 +31,10 @@ class AuthProvider extends ChangeNotifier {
         _token = token;
         _user = user;
 
-        // Sync Firebase user after restoring session
-        await _firebase.setUserId(user.id);
-        await _firebase.syncTokenAfterLogin();
+        // Sync Firebase user after restoring session (don't await to speed up)
+        _firebase.setUserId(user.id).then((_) {
+          _firebase.syncTokenAfterLogin();
+        });
         debugPrint('✅ Session restored for user: ${user.name}');
       }
     } catch (e) {
@@ -173,6 +171,26 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       _errorMessage = 'Update failed. Please try again.';
       notifyListeners();
+      return false;
+    }
+  }
+
+  // ── Refresh User Data ─────────────────────────────────────────────────────
+  Future<bool> refreshUser() async {
+    try {
+      final response = await _api.get(AppConstants.profileEndpoint);
+
+      final userData = response['user'];
+      if (userData != null) {
+        _user = UserModel.fromJson(userData);
+        await StorageService.saveUser(_user!);
+        notifyListeners();
+        debugPrint('✅ User data refreshed: ${_user!.subscriptionStatus}');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Failed to refresh user data: $e');
       return false;
     }
   }

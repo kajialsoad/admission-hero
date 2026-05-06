@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+﻿import { Request, Response } from 'express';
 import User from '../models/User';
 import Exam from '../models/Exam';
 import Question from '../models/Question';
@@ -15,7 +15,7 @@ export const dashboard = async (req: Request, res: Response) => {
     const totalQuestions = await Question.countDocuments();
     const totalVideos = await Video.countDocuments();
 
-    // Calculate total revenue from active/paid subscriptions
+    // Calculate total revenue from active/Premium subscriptions
     const subscriptions = await Subscription.find({});
     const totalRevenue = subscriptions.reduce((sum, sub) => sum + (sub.amount || 0), 0);
 
@@ -91,7 +91,7 @@ export const createAdmin = async (req: Request, res: Response) => {
       role: 'admin',
       isVerified: true,
       isActive: true,
-      subscriptionStatus: 'paid'
+      subscriptionStatus: 'Premium'
     });
 
     const adminData = admin.toObject();
@@ -439,31 +439,60 @@ export const updateUserSubscription = async (req: Request, res: Response) => {
       });
     }
 
-    // Calculate duration days based on subscription type
-    let durationDays = 0;
-    if (subscriptionType === '1-month') durationDays = 30;
-    else if (subscriptionType === '3-month') durationDays = 90;
-    else if (subscriptionType === '6-month') durationDays = 180;
-
-    // Calculate expiry date
-    let expireAt = null;
-    if (subscriptionStatus === 'paid' && durationDays > 0) {
-      expireAt = new Date();
-      expireAt.setDate(expireAt.getDate() + durationDays);
+    // If changing to free, clear all subscription data
+    if (subscriptionStatus === 'free') {
+      user.subscriptionStatus = 'free';
+      user.subscriptionType = undefined;
+      user.subscriptionExpireAt = undefined;
+      
+      // Deactivate any active subscriptions
+      await Subscription.updateMany(
+        { user: userId, active: true },
+        { active: false }
+      );
+      
+      await user.save();
+      
+      console.log(`User ${userId} changed to free - cleared subscription data`);
+      
+      return res.json({
+        success: true,
+        data: user,
+        message: 'User subscription updated to free successfully'
+      });
     }
 
-    // Update user
-    user.subscriptionStatus = subscriptionStatus || user.subscriptionStatus;
-    user.subscriptionType = subscriptionType || null;
-    user.subscriptionExpireAt = expireAt || undefined;
-    
-    await user.save();
+    // If changing to Premium, calculate duration and expiry
+    if (subscriptionStatus === 'Premium') {
+      // Calculate duration days based on subscription type
+      let durationDays = 0;
+      if (subscriptionType === '1-month') durationDays = 30;
+      else if (subscriptionType === '3-month') durationDays = 90;
+      else if (subscriptionType === '6-month') durationDays = 180;
+      else if (subscriptionType === '12-month') durationDays = 365;
 
-    // Create subscription record if making paid
-    if (subscriptionStatus === 'paid' && durationDays > 0) {
+      if (durationDays === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid subscription type for Premium user'
+        });
+      }
+
+      // Calculate expiry date from now
+      const expireAt = new Date();
+      expireAt.setDate(expireAt.getDate() + durationDays);
+
+      // Update user
+      user.subscriptionStatus = 'Premium';
+      user.subscriptionType = subscriptionType;
+      user.subscriptionExpireAt = expireAt;
+      
+      await user.save();
+
+      // Create subscription record
       const subscription = new Subscription({
         user: userId,
-        packageName: `${subscriptionType} (Admin Granted)`,
+        packageName: `${subscriptionType.replace('-', ' ')} (Admin Granted)`,
         planId: subscriptionType,
         startAt: new Date(),
         expireAt: expireAt,
@@ -474,7 +503,24 @@ export const updateUserSubscription = async (req: Request, res: Response) => {
       });
       
       await subscription.save();
+      
+      console.log(`User ${userId} changed to Premium - ${subscriptionType} (${durationDays} days)`);
+
+      return res.json({
+        success: true,
+        data: user,
+        message: `User subscription updated to ${subscriptionType} successfully`
+      });
     }
+
+    // If neither free nor Premium specified, just update what was provided
+    user.subscriptionStatus = subscriptionStatus || user.subscriptionStatus;
+    user.subscriptionType = subscriptionType || user.subscriptionType;
+    if (subscriptionExpireAt) {
+      user.subscriptionExpireAt = new Date(subscriptionExpireAt);
+    }
+    
+    await user.save();
 
     res.json({
       success: true,

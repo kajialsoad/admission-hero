@@ -1,4 +1,4 @@
-import User from '../models/User';
+﻿import User from '../models/User';
 import cron from 'node-cron';
 
 /**
@@ -9,9 +9,9 @@ export const checkExpiredSubscriptions = async () => {
   try {
     const now = new Date();
     
-    // Find all paid users whose subscription has expired
+    // Find all Premium users whose subscription has expired
     const expiredUsers = await User.find({
-      subscriptionStatus: 'paid',
+      subscriptionStatus: 'Premium',
       subscriptionExpireAt: { $lt: now }
     });
 
@@ -25,7 +25,7 @@ export const checkExpiredSubscriptions = async () => {
     // Update all expired users to free status
     const result = await User.updateMany(
       {
-        subscriptionStatus: 'paid',
+        subscriptionStatus: 'Premium',
         subscriptionExpireAt: { $lt: now }
       },
       {

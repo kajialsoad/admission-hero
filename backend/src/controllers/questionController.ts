@@ -1,4 +1,4 @@
-import type { Request, Response } from "express"
+﻿import type { Request, Response } from "express"
 import Question from "../models/Question"
 import QuestionSet from "../models/QuestionSet"
 import University from "../models/University"
@@ -32,7 +32,7 @@ export const getAvailableSessions = async (req: Request, res: Response) => {
             $sum: { $cond: [{ $eq: ["$accessType", "free"] }, 1, 0] },
           },
           paidSets: {
-            $sum: { $cond: [{ $eq: ["$accessType", "paid"] }, 1, 0] },
+            $sum: { $cond: [{ $eq: ["$accessType", "Premium"] }, 1, 0] },
           },
         },
       },
@@ -172,7 +172,7 @@ export const createQuestionSet = async (req: Request, res: Response) => {
           totalQuestions: questions.length,
           videoUrl: videoUrl?.trim() || undefined,
           description: description?.trim() || undefined,
-          accessType: accessType || 'paid', // Add accessType with default 'paid'
+          accessType: accessType || 'Premium', // Add accessType with default 'Premium'
         },
       ],
       { session }

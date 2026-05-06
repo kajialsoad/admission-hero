@@ -105,26 +105,12 @@ class AdmissionHeroApp extends StatelessWidget {
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: themeService.themeMode,
-            home: _buildHome(auth),
+            home: const AppInitializer(),
             onGenerateRoute: _generateRoute,
           );
         },
       ),
     );
-  }
-
-  Widget _buildHome(AuthProvider auth) {
-    if (auth.isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-      );
-    }
-    if (auth.isAuthenticated) {
-      return const HomeScreen();
-    }
-    return const AuthScreen();
   }
 
   Route<dynamic> _generateRoute(RouteSettings settings) {
@@ -212,5 +198,250 @@ class AdmissionHeroApp extends StatelessWidget {
           ),
         );
     }
+  }
+}
+
+// ── App Initializer (Controls Splash Screen) ───────────────────────────────
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  bool _showSplash = true;
+  bool _isReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    // Wait for auth to initialize
+    final auth = context.read<AuthProvider>();
+    
+    // Wait for auth initialization
+    int attempts = 0;
+    while (auth.isLoading && attempts < 50) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      attempts++;
+    }
+    
+    // Mark as ready but keep splash visible
+    setState(() => _isReady = true);
+  }
+
+  void _dismissSplash() {
+    if (_isReady) {
+      setState(() => _showSplash = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_showSplash) {
+      return SplashScreen(
+        onDismiss: _dismissSplash,
+        isReady: _isReady,
+      );
+    }
+
+    // After splash is dismissed, show appropriate screen
+    final auth = context.watch<AuthProvider>();
+    if (auth.isAuthenticated) {
+      return const HomeScreen();
+    }
+    return const AuthScreen();
+  }
+}
+
+// ── Splash Screen ──────────────────────────────────────────────────────────
+class SplashScreen extends StatefulWidget {
+  final VoidCallback onDismiss;
+  final bool isReady;
+  
+  const SplashScreen({
+    super.key, 
+    required this.onDismiss,
+    required this.isReady,
+  });
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  bool _showTapHint = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _controller.forward();
+
+    // Show "Tap to continue" hint after animation completes
+    _checkReadyState();
+  }
+
+  void _checkReadyState() {
+    Future.delayed(const Duration(milliseconds: 1600), () {
+      if (mounted && widget.isReady) {
+        setState(() => _showTapHint = true);
+      } else if (mounted) {
+        // Check again if not ready
+        _checkReadyState();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    // Dismiss splash and let AppInitializer handle navigation
+    widget.onDismiss();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: GestureDetector(
+        onTap: _handleTap,
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Opacity(
+                opacity: _fadeAnimation.value,
+                child: Transform.scale(
+                  scale: _scaleAnimation.value,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Logo
+                      Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.2),
+                              blurRadius: 30,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.1),
+                            width: 2,
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/app_icon.png',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.school,
+                                size: 80,
+                                color: AppColors.primary,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // App Name
+                      const Text(
+                        'Admission Hero',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Prepare for Success',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 60),
+                      // Tap to continue hint
+                      AnimatedOpacity(
+                        opacity: _showTapHint ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 800),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.touch_app,
+                              color: AppColors.primary,
+                              size: 32,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Tap to continue',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'চালিয়ে যেতে ট্যাপ করুন',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
   }
 }

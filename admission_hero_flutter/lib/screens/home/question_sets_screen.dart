@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
@@ -33,7 +33,7 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
     );
   }
 
-  // Check if user can access paid content
+  // Check if user can access Premium content
   Future<bool> _checkPaidAccess(QuestionSet set) async {
     // If set is free, allow access
     if (set.isFree) return true;
@@ -282,8 +282,8 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
                     color: set.isFree 
                         ? const Color(0xFFDCFCE7) // Free - light green
                         : userCanAccess 
-                            ? const Color(0xFFDCFCE7) // Paid but user has subscription - light green
-                            : const Color(0xFFFEF3C7), // Paid and user doesn't have subscription - yellow
+                            ? const Color(0xFFDCFCE7) // Premium but user has subscription - light green
+                            : const Color(0xFFFEF3C7), // Premium and user doesn't have subscription - yellow
                     borderRadius: BorderRadius.circular(20)
                   ),
                   child: Row(
@@ -293,7 +293,7 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
                         set.isFree 
                             ? Icons.check_circle 
                             : userCanAccess 
-                                ? Icons.lock_open // Unlocked for paid users
+                                ? Icons.lock_open // Unlocked for Premium users
                                 : Icons.lock, // Locked for free users
                         size: 12,
                         color: set.isFree 
@@ -304,7 +304,7 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        set.isFree ? 'Free' : 'Paid',
+                        set.isFree ? 'Free' : 'Premium',
                         style: TextStyle(
                           fontSize: 11, 
                           color: set.isFree 

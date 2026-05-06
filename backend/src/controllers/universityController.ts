@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+﻿import { Request, Response } from 'express';
 import University from '../models/University';
 
 // Get all universities with pagination and search
@@ -26,7 +26,7 @@ export const getUniversities = async (req: Request, res: Response) => {
     // Import QuestionSet model dynamically to avoid circular dependency
     const QuestionSet = require('../models/QuestionSet').default;
 
-    // Add free/paid counts for each university
+    // Add free/Premium counts for each university
     const universitiesWithCounts = await Promise.all(
       universities.map(async (uni) => {
         const freeCount = await QuestionSet.countDocuments({
@@ -36,7 +36,7 @@ export const getUniversities = async (req: Request, res: Response) => {
         
         const paidCount = await QuestionSet.countDocuments({
           university: uni._id,
-          accessType: 'paid'
+          accessType: 'Premium'
         });
 
         return {

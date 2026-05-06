@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from 'express';
+﻿import type { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 import Subscription from '../models/Subscription';
 
@@ -25,7 +25,7 @@ export const requireSubscription = async (req: Request, res: Response, next: Nex
     }
 
     // Check if user has active subscription
-    if (user.subscriptionStatus === 'paid' && user.subscriptionExpireAt) {
+    if (user.subscriptionStatus === 'Premium' && user.subscriptionExpireAt) {
       if (new Date() < user.subscriptionExpireAt) {
         // Subscription is active
         return next();
@@ -41,9 +41,9 @@ export const requireSubscription = async (req: Request, res: Response, next: Nex
 
     if (subscription) {
       // Update user if subscription exists but user status is not updated
-      if (user.subscriptionStatus !== 'paid') {
+      if (user.subscriptionStatus !== 'Premium') {
         await User.findByIdAndUpdate(userId, {
-          subscriptionStatus: 'paid',
+          subscriptionStatus: 'Premium',
           subscriptionExpireAt: subscription.expireAt
         });
       }
@@ -85,7 +85,7 @@ export const checkSubscriptionStatus = async (req: Request, res: Response, next:
 
     // Check if user has active subscription
     const hasActiveSubscription = 
-      user.subscriptionStatus === 'paid' && 
+      user.subscriptionStatus === 'Premium' && 
       user.subscriptionExpireAt && 
       new Date() < user.subscriptionExpireAt;
 

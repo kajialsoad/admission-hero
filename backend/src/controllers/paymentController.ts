@@ -1,4 +1,4 @@
-// controllers/paymentController.ts
+﻿// controllers/paymentController.ts
 import type { Request, Response } from "express"
 import Subscription from "../models/Subscription"
 import Payment from "../models/Payment"
@@ -333,7 +333,7 @@ export const handleBKashCallback = async (req: Request, res: Response) => {
 
     // Update user subscription status
     await User.findByIdAndUpdate(subscription.user, {
-      subscriptionStatus: 'paid',
+      subscriptionStatus: 'Premium',
       subscriptionType: subscriptionType,
       subscriptionExpireAt: subscription.expireAt
     })
@@ -496,7 +496,7 @@ export const verifyBKashPayment = async (req: Request, res: Response) => {
     // ✅ UPDATE USER SUBSCRIPTION STATUS
     const User = require('../models/User').default
     await User.findByIdAndUpdate(userId, {
-      subscriptionStatus: 'paid',
+      subscriptionStatus: 'Premium',
       subscriptionType: subscriptionType,
       subscriptionExpireAt: expireAt
     })
@@ -518,19 +518,19 @@ export const verifyBKashPayment = async (req: Request, res: Response) => {
 
 // ============ Google Play Billing ============
 
-// Fix existing paid users without expiry date (Admin only)
+// Fix existing Premium users without expiry date (Admin only)
 export const fixPaidUsersExpiry = async (req: Request, res: Response) => {
   try {
-    // Find all paid users without expiry date
+    // Find all Premium users without expiry date
     const usersToFix = await User.find({
-      subscriptionStatus: 'paid',
+      subscriptionStatus: 'Premium',
       $or: [
         { subscriptionExpireAt: null },
         { subscriptionExpireAt: { $exists: false } }
       ]
     });
 
-    console.log(`Found ${usersToFix.length} paid users without expiry date`);
+    console.log(`Found ${usersToFix.length} Premium users without expiry date`);
 
     const results = [];
 
@@ -597,10 +597,10 @@ export const fixPaidUsersExpiry = async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    console.error("Fix paid users error:", error);
+    console.error("Fix Premium users error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to fix paid users"
+      message: error.message || "Failed to fix Premium users"
     });
   }
 };
@@ -705,7 +705,7 @@ export const verifyGooglePlayPurchase = async (req: Request, res: Response) => {
 
     // Update user subscription status
     await User.findByIdAndUpdate(userId, {
-      subscriptionStatus: 'paid',
+      subscriptionStatus: 'Premium',
       subscriptionType: packageType,
       subscriptionExpireAt: expireAt
     });

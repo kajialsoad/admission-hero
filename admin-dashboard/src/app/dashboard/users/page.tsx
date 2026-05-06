@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { Search, UserCheck, UserX, Mail, Phone, Edit2, Zap, UserPlus } from "lucide-react"
@@ -7,7 +7,7 @@ import { useGetUsersQuery, useUpdateUserStatusMutation, useUpdateUserSubscriptio
 
 interface SubscriptionModalData {
   userId: string
-  currentStatus: "free" | "paid"
+  currentStatus: "free" | "Premium"
   currentType?: "1-month" | "3-month" | "6-month"
   currentExpireAt?: string
 }
@@ -16,7 +16,7 @@ export default function UsersPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
-  const [subscriptionFilter, setSubscriptionFilter] = useState<"all" | "free" | "paid">("all")
+  const [subscriptionFilter, setSubscriptionFilter] = useState<"all" | "free" | "Premium">("all")
   const [showSubModal, setShowSubModal] = useState(false)
   const [subModalData, setSubModalData] = useState<SubscriptionModalData | null>(null)
   const [showCreateAdminModal, setShowCreateAdminModal] = useState(false)
@@ -69,7 +69,7 @@ export default function UsersPage() {
   const handleSubscriptionUpdate = async (formData: SubscriptionModalData) => {
     try {
       const expireAt =
-        formData.currentStatus === "paid" && formData.currentType
+        formData.currentStatus === "Premium" && formData.currentType
           ? new Date(Date.now() + getDurationMs(formData.currentType)).toISOString()
           : undefined
 
@@ -106,7 +106,7 @@ export default function UsersPage() {
     )
   }
 
-  const getSubscriptionBadge = (status: "free" | "paid", expireAt?: string) => {
+  const getSubscriptionBadge = (status: "free" | "Premium", expireAt?: string) => {
     const isExpired = expireAt && new Date(expireAt) < new Date()
     const daysLeft =
       expireAt && !isExpired
@@ -131,7 +131,7 @@ export default function UsersPage() {
 
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-        Paid ({daysLeft}d left)
+        Premium ({daysLeft}d left)
       </span>
     )
   }
@@ -249,9 +249,9 @@ export default function UsersPage() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Paid Users</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Premium Users</dt>
                   <dd className="text-2xl font-semibold text-gray-900">
-                    {data?.data?.filter((user) => user.subscriptionStatus === "paid").length || 0}
+                    {data?.data?.filter((user) => user.subscriptionStatus === "Premium").length || 0}
                   </dd>
                 </dl>
               </div>
@@ -313,11 +313,11 @@ export default function UsersPage() {
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                 value={subscriptionFilter}
-                onChange={(e) => setSubscriptionFilter(e.target.value as "all" | "free" | "paid")}
+                onChange={(e) => setSubscriptionFilter(e.target.value as "all" | "free" | "Premium")}
               >
                 <option value="all">All Users</option>
                 <option value="free">Free Users</option>
-                <option value="paid">Paid Users</option>
+                <option value="Premium">Premium Users</option>
               </select>
             </div>
           </div> */}
@@ -360,7 +360,7 @@ export default function UsersPage() {
                         <span className="mx-2">•</span>
                         <span>Joined: {formatDate(user.createdAt)}</span>
                       </div>
-                      {user.subscriptionStatus === "paid" && user.subscriptionType && (
+                      {user.subscriptionStatus === "Premium" && user.subscriptionType && (
                         <div className="mt-2 text-sm text-blue-600 font-medium">
                           Plan: {user.subscriptionType.replace("-", " ")} {user.subscriptionExpireAt && `(Expires: ${formatDate(user.subscriptionExpireAt)})`}
                         </div>
@@ -433,17 +433,17 @@ export default function UsersPage() {
                   onChange={(e) => {
                     setSubModalData({
                       ...subModalData,
-                      currentStatus: e.target.value as "free" | "paid",
+                      currentStatus: e.target.value as "free" | "Premium",
                       currentType: e.target.value === "free" ? undefined : subModalData.currentType,
                     })
                   }}
                 >
                   <option value="free">Free User</option>
-                  <option value="paid">Paid User</option>
+                  <option value="Premium">Premium User</option>
                 </select>
               </div>
 
-              {subModalData.currentStatus === "paid" && (
+              {subModalData.currentStatus === "Premium" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Plan Duration</label>
                   <select
@@ -464,7 +464,7 @@ export default function UsersPage() {
                 </div>
               )}
 
-              {subModalData.currentStatus === "paid" && subModalData.currentType && (
+              {subModalData.currentStatus === "Premium" && subModalData.currentType && (
                 <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800">
                   Subscription will be valid for {subModalData.currentType.split("-")[0]} month(s) from now.
                 </div>
@@ -482,7 +482,7 @@ export default function UsersPage() {
               </button>
               <button
                 onClick={() => handleSubscriptionUpdate(subModalData)}
-                disabled={subModalData.currentStatus === "paid" && !subModalData.currentType}
+                disabled={subModalData.currentStatus === "Premium" && !subModalData.currentType}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Update

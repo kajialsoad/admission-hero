@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+﻿import mongoose from 'mongoose';
 import User from '../models/User';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -22,7 +22,7 @@ const createAdmin = async () => {
       role: 'admin',
       isVerified: true,
       isActive: true,
-      subscriptionStatus: 'paid'
+      subscriptionStatus: 'Premium'
     };
 
     // Check if admin already exists

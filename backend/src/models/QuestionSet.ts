@@ -1,4 +1,4 @@
-import mongoose, { Schema, type Document } from "mongoose"
+﻿import mongoose, { Schema, type Document } from "mongoose"
 
 export interface IQuestionSet extends Document {
   name: string
@@ -8,7 +8,7 @@ export interface IQuestionSet extends Document {
   totalQuestions: number
   videoUrl?: string
   description?: string
-  accessType: 'free' | 'paid' // New field for access control
+  accessType: 'free' | 'Premium' // New field for access control
   createdAt: Date
   updatedAt: Date
 }
@@ -22,7 +22,7 @@ const QuestionSetSchema = new Schema(
     totalQuestions: { type: Number, default: 0 },
     videoUrl: { type: String },
     description: { type: String },
-    accessType: { type: String, enum: ['free', 'paid'], default: 'paid' }, // Default is paid
+    accessType: { type: String, enum: ['free', 'Premium'], default: 'Premium' }, // Default is Premium
   },
   { timestamps: true },
 )
