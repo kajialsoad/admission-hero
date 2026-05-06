@@ -241,7 +241,7 @@ class _AuthScreenState extends State<AuthScreen>
         const SizedBox(height: 8),
         const Text('Welcome Back', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
-        Text('Sign in to continue', style: TextStyle(fontSize: 14, color: AppColors.textMuted)),
+        Text('Log in to continue', style: TextStyle(fontSize: 14, color: AppColors.textMuted)),
         const SizedBox(height: 28),
 
         _buildLabel('Email or Phone'),
@@ -290,7 +290,7 @@ class _AuthScreenState extends State<AuthScreen>
             child: _isLoading
                 ? const SizedBox(height: 20, width: 20,
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                : const Text('Log In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ),
         ),
         const SizedBox(height: 20),
@@ -301,7 +301,7 @@ class _AuthScreenState extends State<AuthScreen>
             Text("Don't have an account? ", style: TextStyle(color: AppColors.textSecondary)),
             GestureDetector(
               onTap: _switchMode,
-              child: Text('Sign Up',
+              child: Text('Registration',
                   style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
             ),
           ],
@@ -385,7 +385,7 @@ class _AuthScreenState extends State<AuthScreen>
             child: _isLoading
                 ? const SizedBox(height: 20, width: 20,
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                : const Text('Registration', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ),
         ),
         const SizedBox(height: 20),
@@ -396,7 +396,7 @@ class _AuthScreenState extends State<AuthScreen>
             Text('Already have an account? ', style: TextStyle(color: AppColors.textSecondary)),
             GestureDetector(
               onTap: _switchMode,
-              child: Text('Sign In',
+              child: Text('Log In',
                   style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
             ),
           ],
