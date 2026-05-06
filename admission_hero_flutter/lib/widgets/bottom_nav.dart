@@ -43,7 +43,7 @@ class BottomNav extends StatelessWidget {
               _NavItem(
                 icon: Icons.insights_outlined,
                 activeIcon: Icons.insights,
-                label: 'My Performance',
+                label: 'Performance',
                 isActive: currentIndex == 2,
                 onTap: () {
                   if (currentIndex != 2) Navigator.pushNamed(context, '/performance');
@@ -107,6 +107,9 @@ class _NavItem extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11,
                 color: isActive ? AppColors.primary : AppColors.textMuted,
