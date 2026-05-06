@@ -118,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 4),
                         Text(user?.email ?? user?.phone ?? 'Not logged in',
                             style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
-                        if (user?.subscriptionStatus == 'Premium') ...[
+                        if (user?.isSubscribed == true) ...[
                           const SizedBox(height: 10),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -137,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
 
                     // Subscription Info Card (if Premium user)
-                    if (user?.subscriptionStatus == 'Premium' && user?.subscriptionExpireAt != null)
+                    if (user?.isSubscribed == true && user?.subscriptionExpireAt != null)
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16),
                         padding: const EdgeInsets.all(20),

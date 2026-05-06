@@ -46,6 +46,49 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleExamPress(QuestionSet set) {
+    final user = context.read<AuthProvider>().user;
+    final bool isPremiumUser = user?.isSubscribed ?? false;
+    
+    // Check if user can access this exam
+    if (!set.isFree && !isPremiumUser) {
+      // Show subscription required dialog
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Icon(Icons.lock, color: AppColors.warning),
+              const SizedBox(width: 8),
+              const Text('Premium Content', style: TextStyle(fontWeight: FontWeight.w700)),
+            ],
+          ),
+          content: Text(
+            'This exam is only available for premium users. Subscribe now to access all premium content!',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pushNamed(context, '/subscription');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text('Subscribe Now'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    
+    // User can access - show start exam dialog
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -318,9 +361,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildExamsSection(List<QuestionSet> sets, bool loading) {
     if (loading) return _buildLoading('Loading exams...');
+    
     if (sets.isEmpty) {
       return _buildEmpty(Icons.description_outlined, 'No exams available');
     }
+    
+    // Show all content but with lock indicators for premium content
     return Column(
       children: sets
           .map((set) => Padding(

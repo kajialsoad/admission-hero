@@ -644,7 +644,7 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
                             onPressed: () {
                               // Check if selected package is already Premium
                               final user = context.read<AuthProvider>().user;
-                              final hasSelectedPackage = user?.subscriptionStatus == 'Premium' && 
+                              final hasSelectedPackage = user?.isSubscribed == true && 
                                                          user?.subscriptionType != null &&
                                                          provider.selectedPackage != null &&
                                                          _isMatchingPackage(user!.subscriptionType!, provider.selectedPackage!.type);
@@ -685,7 +685,7 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
                                       // Check if selected package is already Premium
                                       final user = context.read<AuthProvider>().user;
                                       if (provider.selectedPackage != null &&
-                                          user?.subscriptionStatus == 'Premium' && 
+                                          user?.isSubscribed == true && 
                                           user?.subscriptionType != null &&
                                           _isMatchingPackage(user!.subscriptionType!, provider.selectedPackage!.type)) {
                                         return 'Already Premium - Select Another Package';
@@ -721,7 +721,7 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
     
     // Check if user already has this package type
     final user = context.read<AuthProvider>().user;
-    final hasThisPackage = user?.subscriptionStatus == 'Premium' && 
+    final hasThisPackage = user?.isSubscribed == true && 
                            user?.subscriptionType != null &&
                            _isMatchingPackage(user!.subscriptionType!, package.type);
     
