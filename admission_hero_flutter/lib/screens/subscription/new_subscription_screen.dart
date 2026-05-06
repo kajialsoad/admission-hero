@@ -637,7 +637,7 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
 
                         const SizedBox(height: 24),
 
-                        // Pay Now Button
+                        // Enroll Now Button
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -691,7 +691,7 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
                                         return 'Already Premium - Select Another Package';
                                       }
                                       
-                                      return 'Pay Now';
+                                      return 'Enroll Now';
                                     }(),
                                     style: const TextStyle(
                                       fontSize: 16,
