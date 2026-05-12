@@ -307,14 +307,6 @@ class _AuthScreenState extends State<AuthScreen>
           ],
         ),
         const SizedBox(height: 16),
-
-        Center(
-          child: TextButton(
-            onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
-            child: Text('Continue as guest',
-                style: TextStyle(color: AppColors.textMuted)),
-          ),
-        ),
       ],
     );
   }

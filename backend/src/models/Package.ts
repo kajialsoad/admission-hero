@@ -6,6 +6,7 @@ export interface IPackage extends Document {
   durationDays: number;
   price: number;
   features: string[];
+  description?: string;
   videoUrl?: string;
   status: 'active' | 'inactive';
   createdAt: Date;
@@ -23,6 +24,7 @@ const PackageSchema = new Schema({
   durationDays: { type: Number, required: true },
   price: { type: Number, required: true },
   features: [{ type: String }],
+  description: { type: String, default: '' }, // Course description
   videoUrl: { type: String, default: '' }, // YouTube video URL or ID
   status: {
     type: String,

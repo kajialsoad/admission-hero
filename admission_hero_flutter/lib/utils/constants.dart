@@ -11,6 +11,9 @@ class AppConstants {
   // University endpoints
   static const String universitiesEndpoint = '/universities';
 
+  // Banner endpoints
+  static const String bannersEndpoint = '/banners/active';
+
   // Questions endpoints
   static const String questionSetsEndpoint = '/questions/sets/all';
   static const String questionSetByIdEndpoint = '/questions/sets';

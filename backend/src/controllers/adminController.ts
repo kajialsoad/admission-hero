@@ -127,7 +127,7 @@ export const getAllPackages = async (req: Request, res: Response) => {
 
 export const createPackage = async (req: Request, res: Response) => {
   try {
-    const { type, name, durationDays, price, features, status, videoUrl } = req.body;
+    const { type, name, durationDays, price, features, description, status, videoUrl } = req.body;
     
     if (!type || !name || !durationDays || !price) {
       return res.status(400).json({
@@ -142,6 +142,7 @@ export const createPackage = async (req: Request, res: Response) => {
       durationDays,
       price,
       features: features || [],
+      description: description || '',
       status: status || 'active',
       videoUrl: videoUrl || ''
     });
@@ -163,15 +164,16 @@ export const createPackage = async (req: Request, res: Response) => {
 export const updatePackage = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, durationDays, price, features, status, videoUrl } = req.body;
+    const { name, durationDays, price, features, description, status, videoUrl } = req.body;
     
     console.log('📦 UPDATE PACKAGE - ID:', id);
     console.log('📦 UPDATE PACKAGE - Request body:', JSON.stringify(req.body, null, 2));
+    console.log('📦 UPDATE PACKAGE - description:', description);
     console.log('📦 UPDATE PACKAGE - videoUrl:', videoUrl);
     
     const pkg = await Package.findByIdAndUpdate(
       id,
-      { name, durationDays, price, features, status, videoUrl },
+      { name, durationDays, price, features, description, status, videoUrl },
       { new: true, runValidators: true }
     );
     

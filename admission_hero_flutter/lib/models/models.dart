@@ -1,4 +1,45 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+
+// ─── Banner Model ──────────────────────────────────────────────────────────────
+class BannerModel {
+  final String id;
+  final String title;
+  final String imageUrl;
+  final String? link;
+  final bool isActive;
+  final int order;
+
+  BannerModel({
+    required this.id,
+    required this.title,
+    required this.imageUrl,
+    this.link,
+    this.isActive = true,
+    this.order = 0,
+  });
+
+  factory BannerModel.fromJson(Map<String, dynamic> json) {
+    return BannerModel(
+      id: json['_id'] ?? json['id'] ?? '',
+      title: json['title'] ?? '',
+      imageUrl: json['imageUrl'] ?? '',
+      link: json['link'],
+      isActive: json['isActive'] ?? true,
+      order: json['order'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'title': title,
+      'imageUrl': imageUrl,
+      'link': link,
+      'isActive': isActive,
+      'order': order,
+    };
+  }
+}
 
 // ─── User Model ────────────────────────────────────────────────────────────────
 class UserModel {
@@ -399,6 +440,7 @@ class Package {
   final double price;
   final List<String> features;
   final String status;
+  final String? description;
   final String? videoUrl;
 
   Package({
@@ -409,6 +451,7 @@ class Package {
     required this.price,
     required this.features,
     required this.status,
+    this.description,
     this.videoUrl,
   });
 
@@ -421,6 +464,7 @@ class Package {
       price: (json['price'] ?? 0).toDouble(),
       features: List<String>.from(json['features'] ?? []),
       status: json['status'] ?? 'active',
+      description: json['description'],
       videoUrl: json['videoUrl'],
     );
   }
@@ -434,6 +478,7 @@ class Package {
       'price': price,
       'features': features,
       'status': status,
+      'description': description,
       'videoUrl': videoUrl,
     };
   }

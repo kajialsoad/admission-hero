@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5,6 +6,8 @@ import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../models/models.dart';
 import '../../utils/constants.dart';
+import '../../services/api_service.dart';
+
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -19,7 +22,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   
-  File? _selectedImage;
+  XFile? _selectedImage;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
@@ -57,7 +60,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       
       if (image != null) {
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedImage = image;
         });
       }
     } catch (e) {
@@ -76,29 +79,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Implement profile update API call
-      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
-      
-      // Update local user data
       final authProvider = context.read<AuthProvider>();
-      final currentUser = authProvider.user!;
       
-      final updatedUser = UserModel(
-        id: currentUser.id,
-        name: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        phone: _phoneController.text.trim(),
-        role: currentUser.role,
-        avatar: currentUser.avatar, // TODO: Upload image and get URL
-        subscriptionStatus: currentUser.subscriptionStatus,
-        subscriptionType: currentUser.subscriptionType,
-        subscriptionExpireAt: currentUser.subscriptionExpireAt,
-      );
+      String? avatarUrl;
+      if (_selectedImage != null) {
+        avatarUrl = await ApiService.uploadImage(_selectedImage!);
+        if (avatarUrl == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('ছবি আপলোড করতে ব্যর্থ হয়েছে'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
       
       final success = await authProvider.updateUser(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         phone: _phoneController.text.trim(),
+        avatar: avatarUrl,
       );
       
       if (success && mounted) {
@@ -109,6 +113,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         );
         Navigator.of(context).pop();
+      } else if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage ?? 'প্রোফাইল আপডেট করতে সমস্যা হয়েছে'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -192,10 +203,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         child: ClipOval(
                           child: _selectedImage != null
-                              ? Image.file(
-                                  _selectedImage!,
-                                  fit: BoxFit.cover,
-                                )
+                              ? (kIsWeb
+                                  ? Image.network(
+                                      _selectedImage!.path,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.file(
+                                      File(_selectedImage!.path),
+                                      fit: BoxFit.cover,
+                                    ))
                               : user?.avatar != null
                                   ? Image.network(
                                       user!.avatar!,

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exam_provider.dart';
+import '../../providers/subscription_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
 
@@ -29,10 +30,38 @@ class _FeaturedExamsScreenState extends State<FeaturedExamsScreen> {
 
   void _handleStartExam(QuestionSet set) {
     final user = context.read<AuthProvider>().user;
+    final subscription = context.read<SubscriptionProvider>();
     final bool isPremiumUser = user?.isSubscribed ?? false;
+    final bool hasPaymentMethods = subscription.bkashEnabled || subscription.googlePlayEnabled;
     
     // Check if user can access this exam
     if (!set.isFree && !isPremiumUser) {
+      // Check if payment methods are available
+      if (!hasPaymentMethods) {
+        // Show unavailable dialog
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                Icon(Icons.lock, color: AppColors.warning),
+                const SizedBox(width: 8),
+                const Text('Premium Content', style: TextStyle(fontWeight: FontWeight.w700)),
+              ],
+            ),
+            content: const Text('This exam is only available for premium users. Subscriptions are currently unavailable. Please contact support for assistance.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK', style: TextStyle(color: AppColors.primary)),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+      
       // Show subscription required dialog
       showDialog(
         context: context,
@@ -98,9 +127,9 @@ class _FeaturedExamsScreenState extends State<FeaturedExamsScreen> {
           children: [
             // Header
             Container(
-              color: Colors.white,
               padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 8, left: 16, right: 16, bottom: 12),
               decoration: const BoxDecoration(
+                color: Colors.white,
                 border: Border(bottom: BorderSide(color: AppColors.border)),
               ),
               child: Row(children: [

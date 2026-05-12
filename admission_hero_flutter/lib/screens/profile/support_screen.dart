@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
 import '../chat/chat_screen.dart';
@@ -46,6 +47,30 @@ class _SupportScreenState extends State<SupportScreen> {
     }
   }
 
+  Future<void> _openWhatsApp() async {
+    const phoneNumber = '8801575804161'; // WhatsApp number without + sign
+    const message = 'আসসালামু আলাইকুম! আমি Admission Hero থেকে সাহায্য চাই।';
+    final url = Uri.parse('https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
+    
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('WhatsApp খুলতে সমস্যা হচ্ছে। অনুগ্রহ করে WhatsApp ইনস্টল করুন।')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -76,6 +101,16 @@ class _SupportScreenState extends State<SupportScreen> {
                       );
                     })),
                     const SizedBox(width: 12),
+                    Expanded(child: _contactCard(Icons.phone_outlined, 'Call Us', 'Talk to our team', () {
+                      if (_contactInfo != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Call: ${_contactInfo!.phone}')),
+                        );
+                      }
+                    })),
+                  ]),
+                  const SizedBox(height: 12),
+                  Row(children: [
                     Expanded(child: _contactCard(Icons.email_outlined, 'Email', 'Get help via email', () {
                       if (_contactInfo != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,13 +119,12 @@ class _SupportScreenState extends State<SupportScreen> {
                       }
                     })),
                     const SizedBox(width: 12),
-                    Expanded(child: _contactCard(Icons.phone_outlined, 'Call Us', 'Talk to our team', () {
-                      if (_contactInfo != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Call: ${_contactInfo!.phone}')),
-                        );
-                      }
-                    })),
+                    Expanded(child: _contactCard(
+                      Icons.chat,
+                      'WhatsApp',
+                      'Message on WhatsApp',
+                      () => _openWhatsApp(),
+                    )),
                   ]),
 
                   const SizedBox(height: 30),

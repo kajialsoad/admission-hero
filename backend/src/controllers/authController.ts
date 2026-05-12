@@ -187,6 +187,54 @@ export const getProfile = async (req: Request, res: Response) => {
   }
 };
 
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore - user is added by auth middleware
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { name, email, phone, avatar } = req.body;
+
+    // Check if email or phone is already taken by another user
+    if (email || phone) {
+      const existing = await User.findOne({
+        $or: [
+          { email: email?.trim().toLowerCase() },
+          { phone: phone?.trim() }
+        ],
+        _id: { $ne: userId }
+      });
+      if (existing) {
+        return res.status(400).json({ error: 'Email or phone already in use by another account' });
+      }
+    }
+
+    const updateData: any = {};
+    if (name) updateData.name = name.trim();
+    if (email) updateData.email = email.trim().toLowerCase();
+    if (phone) updateData.phone = phone.trim();
+    if (avatar) updateData.avatar = avatar;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.json({ success: true, user, message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error("UPDATE PROFILE ERROR:", error);
+    return res.status(500).json({ error: "Failed to update profile" });
+  }
+};
+
 export const updateFcmToken = async (req: Request, res: Response) => {
   try {
     // @ts-ignore - user is added by auth middleware

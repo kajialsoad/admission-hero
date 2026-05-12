@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
@@ -11,6 +11,7 @@ export interface IUser extends Document {
   subscriptionStatus: 'free' | 'Premium';
   subscriptionType?: '1-month' | '3-month' | '6-month' | '12-month';
   subscriptionExpireAt?: Date;
+  avatar?: string;
   totalScore: number;
   isActive: boolean;
   fcmToken?: string;
@@ -42,6 +43,7 @@ const UserSchema: Schema = new Schema({
   resetOtpExpiry: { type: Date, default: null, select: false },
   resetToken: { type: String, default: null, select: false },
   resetTokenExpiry: { type: Date, default: null, select: false },
+  avatar: { type: String, default: null },
 }, { timestamps: true });
 
 UserSchema.pre<IUser>('save', async function (next) {

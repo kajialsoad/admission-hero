@@ -144,16 +144,23 @@ class AuthProvider extends ChangeNotifier {
     required String name,
     required String email,
     required String phone,
+    String? avatar,
   }) async {
     _errorMessage = null;
     try {
+      final Map<String, dynamic> requestBody = {
+        'name': name.trim(),
+        'email': email.trim(),
+        'phone': phone.trim(),
+      };
+      
+      if (avatar != null) {
+        requestBody['avatar'] = avatar;
+      }
+
       final response = await _api.put(
         AppConstants.profileEndpoint,
-        {
-          'name': name.trim(),
-          'email': email.trim(),
-          'phone': phone.trim(),
-        },
+        requestBody,
       );
 
       final userData = response['user'];

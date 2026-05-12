@@ -18,6 +18,7 @@ import 'providers/exam_provider.dart';
 import 'providers/university_provider.dart';
 import 'providers/firebase_provider.dart';
 import 'providers/subscription_provider.dart';
+import 'providers/banner_provider.dart';
 
 // Screens
 import 'screens/auth/auth_screen.dart';
@@ -91,6 +92,7 @@ class AdmissionHeroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ExamProvider()),
         ChangeNotifierProvider(create: (_) => ThemeService()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
+        ChangeNotifierProvider(create: (_) => BannerProvider()),
 
         // Firebase provider — initialized after Firebase.initializeApp()
         ChangeNotifierProvider(
@@ -333,114 +335,158 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: GestureDetector(
-        onTap: _handleTap,
-        behavior: HitTestBehavior.opaque,
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeAnimation.value,
-                child: Transform.scale(
-                  scale: _scaleAnimation.value,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Logo
-                      Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.2),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
+      body: Stack(
+        children: [
+          // Main Content
+          GestureDetector(
+            onTap: _handleTap,
+            behavior: HitTestBehavior.opaque,
+            child: Center(
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return Opacity(
+                    opacity: _fadeAnimation.value,
+                    child: Transform.scale(
+                      scale: _scaleAnimation.value,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Logo
+                          Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withOpacity(0.2),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: AppColors.primary.withOpacity(0.1),
+                                width: 2,
+                              ),
                             ),
-                          ],
-                          border: Border.all(
-                            color: AppColors.primary.withOpacity(0.1),
-                            width: 2,
+                            padding: const EdgeInsets.all(12),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/app_icon.png',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.school,
+                                    size: 80,
+                                    color: AppColors.primary,
+                                  );
+                                },
+                              ),
+                            ),
                           ),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/images/app_icon.png',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.school,
-                                size: 80,
-                                color: AppColors.primary,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // App Name
-                      const Text(
-                        'Admission Hero',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Prepare for Success',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 60),
-                      // Tap to continue hint
-                      AnimatedOpacity(
-                        opacity: _showTapHint ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 800),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.touch_app,
+                          const SizedBox(height: 24),
+                          // App Name
+                          const Text(
+                            'Admission Hero',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700,
                               color: AppColors.primary,
-                              size: 32,
+                              letterSpacing: -0.5,
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Tap to continue',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w500,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Prepare for Success',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 100),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // Bottom Elements
+          if (_showTapHint)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 40,
+              child: AnimatedOpacity(
+                opacity: _showTapHint ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 800),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // "from Exam Hero" at the very bottom center
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'from Exam Hero',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.red.shade400,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      // "Next" button at the right side
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Material(
+                          color: AppColors.primary,
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(30),
+                          child: InkWell(
+                            onTap: _handleTap,
+                            borderRadius: BorderRadius.circular(30),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Text(
+                                    'Next',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Icon(
+                                    Icons.arrow_forward_ios,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'চালিয়ে যেতে ট্যাপ করুন',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -20,12 +20,20 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
+    // Log the received file details for debugging
+    console.log('File upload attempt:', { 
+      originalname: file.originalname, 
+      mimetype: file.mimetype 
+    });
+
     // Allow images and common document types
     const allowedTypes = [
       'image/jpeg',
+      'image/jpg',
       'image/png',
       'image/gif',
       'image/webp',
+      'image/octet-stream', // Fallback for some browsers/platforms
       'application/pdf',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -34,7 +42,7 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type') as any, false);
+      cb(new Error(`Invalid file type: ${file.mimetype}`) as any, false);
     }
   },
 });

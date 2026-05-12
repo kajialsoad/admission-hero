@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
 
@@ -14,24 +15,20 @@ class SupportScreen extends StatefulWidget {
 class _SupportScreenState extends State<SupportScreen> {
   final List<FAQItem> _faqs = [
     FAQItem(
-      question: 'কিভাবে সাবস্ক্রিপশন কিনবো?',
-      answer: 'Subscription পেজে গিয়ে আপনার পছন্দের প্যাকেজ সিলেক্ট করুন এবং bKash অথবা Google Play দিয়ে পেমেন্ট করুন।'
+      question: 'How do I used this app?',
+      answer: 'You can use this app to prepare for university admission exams. Browse content, take exams, and track your performance in the performance tab.'
     ),
     FAQItem(
-      question: 'পেমেন্ট করার পর কি হবে?',
-      answer: 'পেমেন্ট সফল হলে আপনার একাউন্ট অটোমেটিক এক্টিভ হয়ে যাবে এবং সব প্রিমিয়াম কন্টেন্ট এক্সেস করতে পারবেন।'
+      question: 'Can I download materials offline?',
+      answer: 'Yes, Premium subscribers can download all study materials and video solutions for offline access.'
     ),
     FAQItem(
-      question: 'প্রোমো কোড কিভাবে ব্যবহার করবো?',
-      answer: 'Subscription পেজে প্রোমো কোড ইনপুট ফিল্ডে আপনার কোড লিখে Apply বাটনে ক্লিক করুন। ডিসকাউন্ট অটোমেটিক এপ্লাই হয়ে যাবে।'
+      question: 'How are exams scored?',
+      answer: 'Exams are scored based on correct answers. Negative marking may apply depending on the specific exam rules of the university.'
     ),
     FAQItem(
-      question: 'সাবস্ক্রিপশন কতদিন ভ্যালিড থাকবে?',
-      answer: 'আপনার সিলেক্ট করা প্যাকেজ অনুযায়ী - ৩ মাস, ৬ মাস অথবা ১২ মাস ভ্যালিড থাকবে।'
-    ),
-    FAQItem(
-      question: 'রিফান্ড পলিসি কি?',
-      answer: 'পেমেন্ট করার ২৪ ঘন্টার মধ্যে রিফান্ড রিকোয়েস্ট করতে পারবেন। আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন।'
+      question: 'Can I retake exams?',
+      answer: 'Yes, most practice exams can be retaken multiple times to help you improve your score and understanding.'
     ),
   ];
 
@@ -40,7 +37,7 @@ class _SupportScreenState extends State<SupportScreen> {
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
-      _showError('WhatsApp খুলতে সমস্যা হয়েছে');
+      _showError('WhatsApp could not be opened');
     }
   }
 
@@ -49,7 +46,7 @@ class _SupportScreenState extends State<SupportScreen> {
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
-      _showError('Phone app খুলতে সমস্যা হয়েছে');
+      _showError('Dialer could not be opened');
     }
   }
 
@@ -58,7 +55,7 @@ class _SupportScreenState extends State<SupportScreen> {
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
-      _showError('Email app খুলতে সমস্যা হয়েছে');
+      _showError('Email app could not be opened');
     }
   }
 
@@ -79,30 +76,31 @@ class _SupportScreenState extends State<SupportScreen> {
         backgroundColor: AppColors.background,
         body: Column(
           children: [
-            // Header
+            // Custom App Bar
             Container(
-              color: AppColors.primary,
+              width: double.infinity,
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 10,
+                bottom: 20,
                 left: 8,
-                right: 16,
-                bottom: 14
+                right: 20,
+              ),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
               ),
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context)
+                    onPressed: () => Navigator.pop(context),
                   ),
-                  const Expanded(
-                    child: Text(
-                      'Support & Help',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white
-                      )
-                    )
+                  const Text(
+                    'Help & Support',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -110,59 +108,115 @@ class _SupportScreenState extends State<SupportScreen> {
 
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Contact Cards
-                    _buildContactCard(
-                      icon: Icons.chat_bubble,
-                      iconColor: const Color(0xFF25D366),
-                      title: 'WhatsApp',
-                      subtitle: '01575804161',
-                      buttonText: 'Chat Now',
-                      onTap: _launchWhatsApp
+                    const Text(
+                      'Contact Us',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
+                    const SizedBox(height: 16),
                     
-                    const SizedBox(height: 12),
-                    
-                    _buildContactCard(
-                      icon: Icons.email,
-                      iconColor: AppColors.error,
-                      title: 'Email',
-                      subtitle: 'support.admissionhero@gmail.com',
-                      buttonText: 'Send Email',
-                      onTap: _launchEmail
+                    // 2x2 Grid for Contact Options
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      childAspectRatio: 1.4,
+                      children: [
+                        _buildContactGridItem(
+                          icon: Iconsax.message_2,
+                          title: 'Live Chat',
+                          subtitle: 'Chat with support',
+                          onTap: _launchWhatsApp, // Using WhatsApp for live chat as requested
+                        ),
+                        _buildContactGridItem(
+                          icon: Iconsax.call,
+                          title: 'Call Us',
+                          subtitle: 'Talk to our team',
+                          onTap: _launchPhone,
+                        ),
+                        _buildContactGridItem(
+                          icon: Iconsax.sms,
+                          title: 'Email',
+                          subtitle: 'Get help via email',
+                          onTap: _launchEmail,
+                        ),
+                        _buildContactGridItem(
+                          icon: Iconsax.messages_1,
+                          title: 'WhatsApp',
+                          subtitle: 'Message on WhatsApp',
+                          onTap: _launchWhatsApp,
+                        ),
+                      ],
                     ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    _buildContactCard(
-                      icon: Icons.phone,
-                      iconColor: AppColors.success,
-                      title: 'Call Us',
-                      subtitle: '01575804161',
-                      buttonText: 'Call Now',
-                      onTap: _launchPhone
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // FAQ Section
+
+                    const SizedBox(height: 32),
+
                     const Text(
                       'Frequently Asked Questions',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary
-                      )
+                        color: AppColors.textPrimary,
+                      ),
                     ),
+                    const SizedBox(height: 16),
+
+                    ..._faqs.map((faq) => _buildFAQItem(faq)).toList(),
                     
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 20),
                     
-                    ..._faqs.map((faq) => _buildFAQItem(faq)),
-                    
-                    const SizedBox(height: 24),
+                    // Contact Info Banner at the bottom
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Contact Information',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Available from 10:00 AM to 10:00 PM',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on_outlined, color: Colors.white, size: 20),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: const Text(
+                                  'Dhaka, Bangladesh',
+                                  style: TextStyle(color: Colors.white, fontSize: 14),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -174,83 +228,51 @@ class _SupportScreenState extends State<SupportScreen> {
     );
   }
 
-  Widget _buildContactCard({
+  Widget _buildContactGridItem({
     required IconData icon,
-    required Color iconColor,
     required String title,
     required String subtitle,
-    required String buttonText,
-    required VoidCallback onTap
+    required VoidCallback onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 6
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12)
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border.withOpacity(0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            child: Icon(icon, color: iconColor, size: 28),
-          ),
-          
-          const SizedBox(width: 16),
-          
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary
-                  )
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textMuted
-                  )
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(width: 12),
-          
-          ElevatedButton(
-            onPressed: onTap,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: AppColors.primary, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
               ),
             ),
-            child: Text(
-              buttonText,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 10,
+                color: AppColors.textMuted,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -261,32 +283,40 @@ class _SupportScreenState extends State<SupportScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          title: Text(
-            faq.question,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary
-            )
+      child: ExpansionTile(
+        shape: const RoundedRectangleBorder(
+          side: BorderSide.none,
+        ),
+        collapsedShape: const RoundedRectangleBorder(
+          side: BorderSide.none,
+        ),
+        title: Text(
+          faq.question,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
           ),
-          children: [
-            Text(
+        ),
+        trailing: Icon(
+          Icons.keyboard_arrow_down,
+          color: AppColors.primary.withOpacity(0.7),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(
               faq.answer,
               style: const TextStyle(
                 fontSize: 13,
-                color: AppColors.textMuted,
-                height: 1.5
-              )
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

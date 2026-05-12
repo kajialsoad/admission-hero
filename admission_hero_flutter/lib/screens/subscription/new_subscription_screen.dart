@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
@@ -107,6 +107,10 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
     // Auto-select first package if available
     if (provider.packages.isNotEmpty && provider.selectedPackage == null) {
       provider.selectPackage(provider.packages.first);
+      
+      // Debug: Print package description
+      print('DEBUG: First package name: ${provider.packages.first.name}');
+      print('DEBUG: First package description: ${provider.packages.first.description}');
       
       // Initialize video if first package has video URL
       final firstPackage = provider.packages.first;
@@ -379,31 +383,53 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
 
                         const SizedBox(height: 20),
 
-                        // Course Description
-                        const Text(
-                          'কোর্স সম্পর্কে',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                        // Course Description - Dynamic from selected package
+                        if (provider.selectedPackage?.description != null && 
+                            provider.selectedPackage!.description!.isNotEmpty) ...[
+                          const Text(
+                            'কোর্স সম্পর্কে',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'এই প্রিমিয়াম সাবস্ক্রিপশনে আপনি পাবেন:\n'
-                          '• সব প্রশ্নের সম্পূর্ণ এক্সেস\n'
-                          '• সব পরীক্ষার এক্সেস\n'
-                          '• সব ভিডিও সলিউশন\n'
-                          '• পারফরম্যান্স এনালিটিক্স\n'
-                          '• প্রায়োরিটি সাপোর্ট',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textMuted,
-                            height: 1.6,
+                          const SizedBox(height: 8),
+                          Text(
+                            provider.selectedPackage!.description!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textMuted,
+                              height: 1.6,
+                            ),
                           ),
-                        ),
-
-                        const SizedBox(height: 24),
+                          const SizedBox(height: 24),
+                        ] else ...[
+                          // Fallback to default description if no description provided
+                          const Text(
+                            'কোর্স সম্পর্কে',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'এই প্রিমিয়াম সাবস্ক্রিপশনে আপনি পাবেন:\n'
+                            '• সব প্রশ্নের সম্পূর্ণ এক্সেস\n'
+                            '• সব পরীক্ষার এক্সেস\n'
+                            '• সব ভিডিও সলিউশন\n'
+                            '• পারফরম্যান্স এনালিটিক্স\n'
+                            '• প্রায়োরিটি সাপোর্ট',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textMuted,
+                              height: 1.6,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
 
                         // Package Selection
                         const Text(
@@ -543,13 +569,13 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
 
                         // Show payment methods based on admin settings
                         if (provider.bkashEnabled)
-                          _buildPaymentMethodCard('bkash', 'bKash', Icons.account_balance_wallet),
+                          _buildPaymentMethodCard('bkash', 'bKash', 'assets/images/bkash_logo.jpeg'),
                         
                         if (provider.bkashEnabled && provider.googlePlayEnabled)
                           const SizedBox(height: 8),
                         
                         if (provider.googlePlayEnabled)
-                          _buildPaymentMethodCard('google_play', 'Google Play', Icons.play_arrow),
+                          _buildPaymentMethodCard('google_play', 'In-App Purchase', 'assets/images/app_purchase_logo.jpeg'),
 
                         // Show message if no payment methods are enabled
                         if (!provider.bkashEnabled && !provider.googlePlayEnabled)
@@ -729,6 +755,10 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
       onTap: hasThisPackage ? null : () {
         provider.selectPackage(package);
         
+        // Debug: Print selected package description
+        print('DEBUG: Selected package name: ${package.name}');
+        print('DEBUG: Selected package description: ${package.description}');
+        
         // Initialize video if package has video URL
         if (package.videoUrl != null && package.videoUrl!.isNotEmpty) {
           final videoId = _extractYoutubeVideoId(package.videoUrl);
@@ -875,7 +905,7 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
     return false;
   }
 
-  Widget _buildPaymentMethodCard(String method, String title, IconData icon) {
+  Widget _buildPaymentMethodCard(String method, String title, String logoPath) {
     final isSelected = _selectedPaymentMethod == method;
     
     return GestureDetector(
@@ -912,7 +942,24 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
                   : null,
             ),
             const SizedBox(width: 16),
-            Icon(icon, color: AppColors.primary),
+            // Payment logo image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.asset(
+                logoPath,
+                width: 40,
+                height: 40,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  print('Error loading image: $logoPath - $error');
+                  return Icon(
+                    method == 'bkash' ? Icons.account_balance_wallet : Icons.shopping_cart,
+                    color: AppColors.primary,
+                    size: 32,
+                  );
+                },
+              ),
+            ),
             const SizedBox(width: 12),
             Text(
               title,

@@ -17,6 +17,7 @@ interface Package {
   durationDays: number
   price: number
   features: string[]
+  description?: string
   videoUrl?: string
   status: string
 }
@@ -34,6 +35,7 @@ export default function PackagesPage() {
     durationDays: 90,
     price: 0,
     features: '',
+    description: '',
     videoUrl: '',
     status: 'active'
   })
@@ -117,6 +119,7 @@ export default function PackagesPage() {
       durationDays: pkg.durationDays,
       price: pkg.price,
       features: pkg.features.join('\n'),
+      description: pkg.description || '',
       videoUrl: pkg.videoUrl || '',
       status: pkg.status
     })
@@ -156,6 +159,7 @@ export default function PackagesPage() {
       durationDays: 90,
       price: 0,
       features: '',
+      description: '',
       videoUrl: '',
       status: 'active'
     })
@@ -233,6 +237,19 @@ export default function PackagesPage() {
                   onChange={(e) => setFormData({ ...formData, features: e.target.value })}
                   placeholder="All Questions Access&#10;All Exams Access&#10;All Video Solutions"
                 />
+              </div>
+
+              <div>
+                <Label>Course Description (কোর্স সম্পর্কে)</Label>
+                <textarea
+                  className="w-full min-h-[120px] p-2 border rounded-md"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="এই প্রিমিয়াম সাবস্ক্রিপশনে আপনি পাবেন:&#10;• সব প্রশ্নের সম্পূর্ণ এক্সেস&#10;• সব পরীক্ষার এক্সেস"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This description will be shown on the subscription page in the mobile app.
+                </p>
               </div>
 
               <div>

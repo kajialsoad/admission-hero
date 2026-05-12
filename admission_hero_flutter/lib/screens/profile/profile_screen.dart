@@ -18,15 +18,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-refresh user data when profile screen is opened
+    // Auto-refresh user data and payment settings when profile screen is opened
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuthProvider>().refreshUser();
+      context.read<SubscriptionProvider>().loadEnabledPaymentMethods();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final subscription = context.watch<SubscriptionProvider>();
     final user = auth.user;
 
     // Debug: Print user subscription info
@@ -36,11 +38,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       print('DEBUG Profile: subscriptionExpireAt = ${user.subscriptionExpireAt}');
     }
 
+    // Check if any payment method is enabled
+    final hasPaymentMethods = subscription.bkashEnabled || subscription.googlePlayEnabled;
+
     final menuItems = [
       _MenuItem(id: 'edit-profile', title: 'Edit Profile', icon: Icons.edit_outlined,
           onTap: () => Navigator.pushNamed(context, '/edit-profile')),
-      _MenuItem(id: 'subscription', title: 'My Subscription', icon: Icons.card_membership_outlined,
-          onTap: () => Navigator.pushNamed(context, '/subscription')),
+      // Only show subscription menu if at least one payment method is enabled
+      if (hasPaymentMethods)
+        _MenuItem(id: 'subscription', title: 'My Subscription', icon: Icons.card_membership_outlined,
+            onTap: () => Navigator.pushNamed(context, '/subscription')),
       _MenuItem(id: 'performance', title: 'My Performance', icon: Icons.insights_outlined,
           onTap: () => Navigator.pushNamed(context, '/performance')),
       _MenuItem(id: 'support', title: 'Help & Support', icon: Icons.help_outline_rounded,
@@ -105,12 +112,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           width: 80, height: 80,
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2), shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
                           ),
-                          child: Center(
-                            child: Text(
-                              user != null && user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-                              style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w700),
-                            ),
+                          child: ClipOval(
+                            child: user?.avatar != null && user!.avatar!.isNotEmpty
+                                ? Image.network(
+                                    user.avatar!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildDefaultAvatar(user.name);
+                                    },
+                                  )
+                                : _buildDefaultAvatar(user?.name ?? '?'),
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -417,6 +430,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ];
     
     return '${expiryDate.day} ${months[expiryDate.month - 1]}, ${expiryDate.year}';
+  }
+
+  Widget _buildDefaultAvatar(String name) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w700),
+      ),
+    );
   }
 }
 

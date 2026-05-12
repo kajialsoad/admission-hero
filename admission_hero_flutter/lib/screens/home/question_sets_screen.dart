@@ -41,8 +41,39 @@ class _QuestionSetsScreenState extends State<QuestionSetsScreen> {
     // Check subscription status
     final subscriptionProvider = context.read<SubscriptionProvider>();
     final hasActiveSubscription = subscriptionProvider.hasSubscription;
+    final hasPaymentMethods = subscriptionProvider.bkashEnabled || subscriptionProvider.googlePlayEnabled;
 
     if (!hasActiveSubscription) {
+      // Check if payment methods are available
+      if (!hasPaymentMethods) {
+        // Show unavailable dialog
+        if (!mounted) return false;
+        
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.lock, color: AppColors.warning),
+                SizedBox(width: 8),
+                Text('Premium Content'),
+              ],
+            ),
+            content: const Text(
+              'This question set requires an active subscription. Subscriptions are currently unavailable. Please contact support for assistance.',
+              style: TextStyle(fontSize: 14),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK', style: TextStyle(color: AppColors.primary)),
+              ),
+            ],
+          ),
+        );
+        return false;
+      }
+      
       // Show dialog and redirect to subscription page
       if (!mounted) return false;
       

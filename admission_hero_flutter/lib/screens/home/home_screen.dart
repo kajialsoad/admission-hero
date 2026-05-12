@@ -5,12 +5,15 @@ import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exam_provider.dart';
 import '../../providers/university_provider.dart';
+import '../../providers/subscription_provider.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
 import '../../widgets/stats_card.dart';
 import '../../widgets/university_card.dart';
 import '../../widgets/exam_card.dart';
+import '../../widgets/banner_slider.dart';
+import '../../providers/banner_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,9 +34,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadData() async {
     final uniProv = context.read<UniversityProvider>();
     final examProv = context.read<ExamProvider>();
+    final bannerProv = context.read<BannerProvider>();
     await Future.wait([
       uniProv.fetchUniversities(limit: 20),
       examProv.fetchQuestionSets(page: 1, limit: 5),
+      bannerProv.fetchBanners(),
     ]);
   }
 
@@ -47,10 +52,41 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleExamPress(QuestionSet set) {
     final user = context.read<AuthProvider>().user;
+    final subscription = context.read<SubscriptionProvider>();
     final bool isPremiumUser = user?.isSubscribed ?? false;
+    final bool hasPaymentMethods = subscription.bkashEnabled || subscription.googlePlayEnabled;
     
     // Check if user can access this exam
     if (!set.isFree && !isPremiumUser) {
+      // Check if payment methods are available
+      if (!hasPaymentMethods) {
+        // Show unavailable dialog
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                Icon(Icons.lock, color: AppColors.warning),
+                const SizedBox(width: 8),
+                const Text('Premium Content', style: TextStyle(fontWeight: FontWeight.w700)),
+              ],
+            ),
+            content: Text(
+              'This exam is only available for premium users. Subscriptions are currently unavailable. Please contact support for assistance.',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('OK', style: TextStyle(color: AppColors.primary)),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+      
       // Show subscription required dialog
       showDialog(
         context: context,
@@ -122,6 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final uniLoading = context.watch<UniversityProvider>().isLoading;
     final questionSets = context.watch<ExamProvider>().questionSets;
     final examLoading = context.watch<ExamProvider>().isLoading;
+    final banners = context.watch<BannerProvider>().banners;
+    final bannerLoading = context.watch<BannerProvider>().isLoading;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -153,6 +191,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildSectionHeader('Select University',
                           subtitle: universities.isNotEmpty ? '${universities.length} Available' : null),
                       _buildUniversitySection(universities, uniLoading),
+
+                      // Banners (Above Featured Exams)
+                      if (!bannerLoading && banners.isNotEmpty)
+                        BannerSlider(banners: banners),
 
                       // Featured Exams
                       _buildSectionHeader('Featured Exams', actionText: 'View All',
@@ -271,10 +313,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: CircleAvatar(
                 radius: 18,
                 backgroundColor: Colors.white.withOpacity(0.2),
-                child: Text(
-                  user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-                ),
+                backgroundImage: user.avatar != null && user.avatar!.isNotEmpty
+                    ? NetworkImage(user.avatar!)
+                    : null,
+                child: user.avatar == null || user.avatar!.isEmpty
+                    ? Text(
+                        user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                      )
+                    : null,
               ),
             )
           else

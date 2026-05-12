@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/chat_service.dart';
 import '../../utils/constants.dart';
@@ -218,6 +219,30 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  Future<void> _openWhatsApp() async {
+    const phoneNumber = '8801575804161'; // WhatsApp number without + sign
+    const message = 'আসসালামু আলাইকুম! আমি Admission Hero থেকে সাহায্য চাই।';
+    final url = Uri.parse('https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
+    
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('WhatsApp খুলতে সমস্যা হচ্ছে। অনুগ্রহ করে WhatsApp ইনস্টল করুন।')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -247,6 +272,11 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.chat),
+            tooltip: 'WhatsApp Support',
+            onPressed: _openWhatsApp,
+          ),
+          IconButton(
             icon: const Icon(Icons.phone),
             onPressed: () {
               // TODO: Implement call functionality
@@ -259,10 +289,100 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Messages List
-          Expanded(
+          Column(
+            children: [
+              // WhatsApp Support Banner
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF25D366).withOpacity(0.15),
+                      const Color(0xFF128C7E).withOpacity(0.15),
+                    ],
+                  ),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: const Color(0xFF25D366).withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF25D366),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.chat,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'দ্রুত সাহায্যের জন্য WhatsApp করুন',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF075E54),
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'সাধারণত ১-২ মিনিটে উত্তর দেওয়া হয়',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF128C7E),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: _openWhatsApp,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.chat, size: 16),
+                          SizedBox(width: 6),
+                          Text(
+                            'Open',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Messages List
+              Expanded(
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
@@ -328,6 +448,36 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
+        
+        // Floating WhatsApp Button
+        Positioned(
+          right: 16,
+          bottom: 90,
+          child: GestureDetector(
+            onTap: _openWhatsApp,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF25D366),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF25D366).withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.chat,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
     );
   }
 

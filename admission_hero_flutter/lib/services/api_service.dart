@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
 import '../utils/constants.dart';
 import '../services/storage_service.dart';
 
@@ -128,4 +132,67 @@ class ApiService {
   static Future<Map<String, dynamic>?> submitExam(Map<String, dynamic> data) => ApiService().post('/exams/submit', data);
   static Future<Map<String, dynamic>?> getPerformanceStats() => ApiService().get('/exams/performance/stats');
   static Future<Map<String, dynamic>?> getRecentExamResults({int limit = 5}) => ApiService().get('/exams/performance/recent?limit=$limit');
+
+  // --- Upload Methods ---
+  static Future<String?> uploadImage(XFile file) async {
+    final uri = Uri.parse('${AppConstants.baseUrl}/uploads/image');
+    final request = http.MultipartRequest('POST', uri);
+    
+    final token = await StorageService.getToken();
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    
+    if (kIsWeb) {
+      final bytes = await file.readAsBytes();
+      final mimeType = _getMimeType(file.name);
+      request.files.add(http.MultipartFile.fromBytes(
+        'image', 
+        bytes, 
+        filename: file.name,
+        contentType: MediaType.parse(mimeType),
+      ));
+    } else {
+      final mimeType = _getMimeType(file.path);
+      request.files.add(await http.MultipartFile.fromPath(
+        'image', 
+        file.path,
+        contentType: MediaType.parse(mimeType),
+      ));
+    }
+    
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final responseData = jsonDecode(response.body);
+        if (responseData['success'] == true) {
+           return responseData['data']['url'];
+        }
+      }
+      print('DEBUG: Upload failed with status ${response.statusCode}: ${response.body}');
+      return null;
+    } catch (e) {
+      print('DEBUG: Upload exception: $e');
+      return null;
+    }
+  }
+
+  static String _getMimeType(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg'; // Default to jpeg
+    }
+  }
 }
