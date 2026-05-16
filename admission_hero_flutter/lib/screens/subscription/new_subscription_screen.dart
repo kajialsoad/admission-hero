@@ -56,6 +56,8 @@ class _NewSubscriptionScreenState extends State<NewSubscriptionScreen> {
       flags: const YoutubePlayerFlags(
         autoPlay: false,
         mute: false,
+        forceHD: false,
+        enableCaption: true,
       ),
     );
     

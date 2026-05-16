@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/exam_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/math_text.dart';
 
 class ExamScreen extends StatefulWidget {
   final String setId;
@@ -59,10 +60,17 @@ class _ExamScreenState extends State<ExamScreen> {
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('⏰ Time Up!', style: TextStyle(fontWeight: FontWeight.w700)),
-        content: const Text("Your exam time has ended. Submitting your answers..."),
+        title: const Text('⏰ Time Up!',
+            style: TextStyle(fontWeight: FontWeight.w700)),
+        content:
+            const Text("Your exam time has ended. Submitting your answers..."),
         actions: [
-          ElevatedButton(onPressed: () { Navigator.pop(context); _submitExam(); }, child: const Text('OK')),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _submitExam();
+              },
+              child: const Text('OK')),
         ],
       ),
     );
@@ -89,13 +97,20 @@ class _ExamScreenState extends State<ExamScreen> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Exit Exam?', style: TextStyle(fontWeight: FontWeight.w700)),
-        content: const Text('Are you sure you want to exit? Your progress will be lost.'),
+        title: const Text('Exit Exam?',
+            style: TextStyle(fontWeight: FontWeight.w700)),
+        content: const Text(
+            'Are you sure you want to exit? Your progress will be lost.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () { Navigator.pop(context); Navigator.pop(context); },
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
             child: const Text('Exit'),
           ),
         ],
@@ -119,7 +134,9 @@ class _ExamScreenState extends State<ExamScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(statusBarColor: AppColors.primary, statusBarIconBrightness: Brightness.light),
+      value: const SystemUiOverlayStyle(
+          statusBarColor: AppColors.primary,
+          statusBarIconBrightness: Brightness.light),
       child: Consumer<ExamProvider>(
         builder: (context, exam, _) {
           if (exam.isLoading) return _buildLoading();
@@ -171,41 +188,62 @@ class _ExamScreenState extends State<ExamScreen> {
       color: AppColors.primary,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 8,
-        left: 12, right: 12, bottom: 12,
+        left: 12,
+        right: 12,
+        bottom: 12,
       ),
       child: Column(
         children: [
           Row(children: [
-            GestureDetector(onTap: _confirmExit,
+            GestureDetector(
+                onTap: _confirmExit,
                 child: const Icon(Icons.close, color: Colors.white, size: 26)),
             const SizedBox(width: 10),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(exam.currentSet?.name ?? 'Exam',
-                  style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
-              Text('${exam.currentSet?.unit ?? ''} • ${exam.currentSet?.universityName ?? ''}',
-                  style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
-            ])),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(exam.currentSet?.name ?? 'Exam',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  Text(
+                      '${exam.currentSet?.unit ?? ''} • ${exam.currentSet?.universityName ?? ''}',
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.8), fontSize: 12)),
+                ])),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: tc.withOpacity(0.2), borderRadius: BorderRadius.circular(20),
+              decoration: BoxDecoration(
+                  color: tc.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: tc)),
               child: Text(_formatTime(exam.timeRemaining),
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16)),
             ),
           ]),
           const SizedBox(height: 10),
           // Progress bar
           Row(children: [
-            Text('${exam.currentQuestionIndex + 1}/${exam.currentQuestions.length}',
-                style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
+            Text(
+                '${exam.currentQuestionIndex + 1}/${exam.currentQuestions.length}',
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.8), fontSize: 12)),
             const SizedBox(width: 10),
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                  value: exam.currentQuestions.isEmpty ? 0
-                      : (exam.currentQuestionIndex + 1) / exam.currentQuestions.length,
+                  value: exam.currentQuestions.isEmpty
+                      ? 0
+                      : (exam.currentQuestionIndex + 1) /
+                          exam.currentQuestions.length,
                   minHeight: 6,
                   backgroundColor: Colors.white.withOpacity(0.2),
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
@@ -218,10 +256,12 @@ class _ExamScreenState extends State<ExamScreen> {
     );
   }
 
-  Widget _buildQuestionCard(ExamProvider exam, Question q, int total, String selectedAnswer) {
+  Widget _buildQuestionCard(
+      ExamProvider exam, Question q, int total, String selectedAnswer) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -231,25 +271,42 @@ class _ExamScreenState extends State<ExamScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [AppColors.primary, Color(0xFF4F46E5)]),
+              gradient: LinearGradient(
+                  colors: [AppColors.primary, Color(0xFF4F46E5)]),
               borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
             ),
-            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('Question ${exam.currentQuestionIndex + 1} of $total',
-                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
-                child: const Text('1 Mark', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-              ),
-            ]),
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Question ${exam.currentQuestionIndex + 1} of $total',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600)),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20)),
+                    child: const Text('1 Mark',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                ]),
           ),
 
           // Q Text
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(q.text,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary, height: 1.6)),
+            child: MathText(q.text,
+                textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    height: 1.6)),
           ),
 
           // Options
@@ -262,26 +319,47 @@ class _ExamScreenState extends State<ExamScreen> {
                   onTap: () => exam.answerQuestion(q.id, opt.key),
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primaryBg : AppColors.borderLight,
+                      color: isSelected
+                          ? AppColors.primaryBg
+                          : AppColors.borderLight,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: isSelected ? 2 : 1),
+                      border: Border.all(
+                          color:
+                              isSelected ? AppColors.primary : AppColors.border,
+                          width: isSelected ? 2 : 1),
                     ),
                     child: Row(children: [
                       Container(
-                        width: 24, height: 24,
+                        width: 24,
+                        height: 24,
                         decoration: BoxDecoration(
                           color: isSelected ? AppColors.primary : Colors.white,
                           shape: BoxShape.circle,
-                          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border, width: 2),
+                          border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.border,
+                              width: 2),
                         ),
-                        child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 14) : null,
+                        child: isSelected
+                            ? const Icon(Icons.check,
+                                color: Colors.white, size: 14)
+                            : null,
                       ),
                       const SizedBox(width: 12),
-                      Expanded(child: Text(opt.text,
-                          style: TextStyle(fontSize: 15, color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400))),
+                      Expanded(
+                          child: MathText(opt.text,
+                              textStyle: TextStyle(
+                                  fontSize: 15,
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.textPrimary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400))),
                     ]),
                   ),
                 );
@@ -297,14 +375,20 @@ class _ExamScreenState extends State<ExamScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Question Map', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+        const Text('Question Map',
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary)),
         const SizedBox(height: 10),
         Wrap(
-          spacing: 6, runSpacing: 6,
+          spacing: 6,
+          runSpacing: 6,
           children: List.generate(total, (i) {
             final q = exam.currentQuestions[i];
             final answered = exam.answers.containsKey(q.id);
@@ -312,19 +396,33 @@ class _ExamScreenState extends State<ExamScreen> {
             return GestureDetector(
               onTap: () => exam.goToQuestion(i),
               child: Container(
-                width: 36, height: 36,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: isCurrent ? AppColors.primary
-                      : answered ? AppColors.successLight : AppColors.borderLight,
+                  color: isCurrent
+                      ? AppColors.primary
+                      : answered
+                          ? AppColors.successLight
+                          : AppColors.borderLight,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isCurrent ? AppColors.primary
-                        : answered ? AppColors.success : AppColors.border,
+                    color: isCurrent
+                        ? AppColors.primary
+                        : answered
+                            ? AppColors.success
+                            : AppColors.border,
                   ),
                 ),
-                child: Center(child: Text('${i + 1}',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-                        color: isCurrent ? Colors.white : answered ? AppColors.success : AppColors.textMuted))),
+                child: Center(
+                    child: Text('${i + 1}',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isCurrent
+                                ? Colors.white
+                                : answered
+                                    ? AppColors.success
+                                    : AppColors.textMuted))),
               ),
             );
           }),
@@ -342,11 +440,17 @@ class _ExamScreenState extends State<ExamScreen> {
   }
 
   Widget _legend(Color border, Color bg, String label) => Row(children: [
-    Container(width: 14, height: 14,
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(3), border: Border.all(color: border))),
-    const SizedBox(width: 4),
-    Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-  ]);
+        Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(color: border))),
+        const SizedBox(width: 4),
+        Text(label,
+            style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+      ]);
 
   Widget _buildFooter(ExamProvider exam, bool isLast) {
     return Container(
@@ -359,7 +463,8 @@ class _ExamScreenState extends State<ExamScreen> {
         // Previous
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: exam.currentQuestionIndex > 0 ? exam.previousQuestion : null,
+            onPressed:
+                exam.currentQuestionIndex > 0 ? exam.previousQuestion : null,
             icon: const Icon(Icons.chevron_left, size: 20),
             label: const Text('Previous'),
             style: OutlinedButton.styleFrom(
@@ -375,18 +480,24 @@ class _ExamScreenState extends State<ExamScreen> {
               ? ElevatedButton.icon(
                   onPressed: _isSubmitting ? null : _submitExam,
                   icon: _isSubmitting
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
                       : const Icon(Icons.check_circle_outline, size: 20),
                   label: Text(_isSubmitting ? 'Submitting...' : 'Submit'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success, padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: AppColors.success,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 )
               : ElevatedButton.icon(
                   onPressed: exam.nextQuestion,
                   label: const Text('Next'),
                   icon: const Icon(Icons.chevron_right, size: 20),
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12)),
                 ),
         ),
       ]),
@@ -394,36 +505,50 @@ class _ExamScreenState extends State<ExamScreen> {
   }
 
   Widget _buildLoading() => const Scaffold(
-    body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      CircularProgressIndicator(color: AppColors.primary),
-      SizedBox(height: 16),
-      Text('Loading exam...', style: TextStyle(color: AppColors.textMuted)),
-    ])),
-  );
+        body: Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+          CircularProgressIndicator(color: AppColors.primary),
+          SizedBox(height: 16),
+          Text('Loading exam...', style: TextStyle(color: AppColors.textMuted)),
+        ])),
+      );
 
   Widget _buildError(String msg) => Scaffold(
-    body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      const Icon(Icons.error_outline, size: 60, color: AppColors.error),
-      const SizedBox(height: 12),
-      Text('Failed to Load Exam', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-      const SizedBox(height: 8),
-      Text(msg, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textMuted)),
-      const SizedBox(height: 20),
-      ElevatedButton(onPressed: _loadExam, child: const Text('Retry')),
-      const SizedBox(height: 10),
-      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Go Back')),
-    ])),
-  );
+        body: Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.error_outline, size: 60, color: AppColors.error),
+          const SizedBox(height: 12),
+          Text('Failed to Load Exam',
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Text(msg,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textMuted)),
+          const SizedBox(height: 20),
+          ElevatedButton(onPressed: _loadExam, child: const Text('Retry')),
+          const SizedBox(height: 10),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Go Back')),
+        ])),
+      );
 
   Widget _buildNoQuestions() => Scaffold(
-    body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      const Icon(Icons.description_outlined, size: 60, color: AppColors.error),
-      const SizedBox(height: 12),
-      const Text('No Questions Found', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-      const SizedBox(height: 8),
-      const Text('This question set has no questions yet.', style: TextStyle(color: AppColors.textMuted)),
-      const SizedBox(height: 20),
-      ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Go Back')),
-    ])),
-  );
+        body: Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.description_outlined,
+              size: 60, color: AppColors.error),
+          const SizedBox(height: 12),
+          const Text('No Questions Found',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          const Text('This question set has no questions yet.',
+              style: TextStyle(color: AppColors.textMuted)),
+          const SizedBox(height: 20),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Go Back')),
+        ])),
+      );
 }

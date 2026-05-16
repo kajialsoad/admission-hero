@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import type React from "react"
 import { useState } from "react"
@@ -101,7 +101,7 @@ export function BulkQuestionSetUpload({ isOpen, onClose }: BulkQuestionSetUpload
         setParsedQuestions(questions)
       }
     }
-    reader.readAsText(selectedFile)
+    reader.readAsText(selectedFile, "UTF-8")
   }
 
   const handleBulkUpload = async () => {

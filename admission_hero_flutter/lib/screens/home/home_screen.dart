@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/exam_provider.dart';
 import '../../providers/university_provider.dart';
 import '../../providers/subscription_provider.dart';
+import '../../providers/statistics_provider.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav.dart';
@@ -14,6 +15,7 @@ import '../../widgets/university_card.dart';
 import '../../widgets/exam_card.dart';
 import '../../widgets/banner_slider.dart';
 import '../../providers/banner_provider.dart';
+import '../../providers/video_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,10 +37,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final uniProv = context.read<UniversityProvider>();
     final examProv = context.read<ExamProvider>();
     final bannerProv = context.read<BannerProvider>();
-    await Future.wait([
+    final videoProv = context.read<VideoProvider>();
+    final statsProv = context.read<StatisticsProvider>();
+    await Future.wait<void>([
       uniProv.fetchUniversities(limit: 20),
       examProv.fetchQuestionSets(page: 1, limit: 5),
       bannerProv.fetchBanners(),
+      videoProv.fetchVideos(),
+      statsProv.fetchStatistics(),
     ]);
   }
 
@@ -160,6 +166,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final examLoading = context.watch<ExamProvider>().isLoading;
     final banners = context.watch<BannerProvider>().banners;
     final bannerLoading = context.watch<BannerProvider>().isLoading;
+    final videos = context.watch<VideoProvider>().videos;
+    final videoLoading = context.watch<VideoProvider>().isLoading;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -200,6 +208,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildSectionHeader('Featured Exams', actionText: 'View All',
                           onAction: () => Navigator.pushNamed(context, '/featured-exams')),
                       _buildExamsSection(questionSets, examLoading),
+
+                      // Learning Videos
+                      _buildSectionHeader('Learning Videos', 
+                          subtitle: videos.isNotEmpty ? '${videos.length} New' : null),
+                      _buildVideosSection(videos, videoLoading),
                     ],
                   ),
                 ),
@@ -340,6 +353,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildStatsSection(List<QuestionSet> sets) {
+    final stats = context.watch<StatisticsProvider>();
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Column(
@@ -350,16 +365,26 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: StatsCard(icon: Icons.book_outlined, label: 'Total Exams', value: sets.length, color: AppColors.primary)),
+              Expanded(child: StatsCard(
+                icon: Icons.book_outlined, 
+                label: 'Total Exams', 
+                value: stats.totalExams, 
+                color: AppColors.primary
+              )),
               const SizedBox(width: 10),
               Expanded(child: StatsCard(
                 icon: Icons.quiz_outlined,
                 label: 'Questions',
-                value: sets.fold<int>(0, (sum, s) => sum + s.totalQuestions),
+                value: stats.totalQuestions,
                 color: AppColors.accent,
               )),
               const SizedBox(width: 10),
-              Expanded(child: StatsCard(icon: Icons.play_circle_outline, label: 'Videos', value: 0, color: AppColors.success)),
+              Expanded(child: StatsCard(
+                icon: Icons.play_circle_outline, 
+                label: 'Videos', 
+                value: stats.totalVideos, 
+                color: AppColors.success
+              )),
             ],
           ),
         ],
@@ -404,6 +429,102 @@ class _HomeScreenState extends State<HomeScreen> {
               ))
           .toList(),
     );
+  }
+
+  Widget _buildVideosSection(List<VideoModel> videos, bool loading) {
+    if (loading) return _buildLoading('Loading videos...');
+    if (videos.isEmpty) {
+      return _buildEmpty(Icons.play_circle_outline, 'No videos available');
+    }
+    return SizedBox(
+      height: 180,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: videos.length,
+        itemBuilder: (context, index) {
+          final video = videos[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, '/video-player', arguments: {
+                'videoUrl': video.url,
+                'title': video.title,
+                'description': 'Dynamic learning video for your preparation.',
+              });
+            },
+            child: Container(
+              width: 240,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Thumbnail placeholder
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: Container(
+                      height: 120,
+                      color: Colors.black,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Image.network(
+                            'https://img.youtube.com/vi/${_extractVideoId(video.url)}/hqdefault.jpg',
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.play_circle, color: Colors.white, size: 40),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(color: Colors.black26, shape: BoxShape.circle),
+                            child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
+                          ),
+                          if (video.isPremium)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(color: AppColors.warning, shape: BoxShape.circle),
+                                child: const Icon(Icons.lock, color: Colors.white, size: 12),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Text(
+                      video.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  String _extractVideoId(String url) {
+    if (url.contains('v=')) return url.split('v=')[1].split('&')[0];
+    if (url.contains('youtu.be/')) return url.split('youtu.be/')[1].split('?')[0];
+    return '';
   }
 
   Widget _buildExamsSection(List<QuestionSet> sets, bool loading) {

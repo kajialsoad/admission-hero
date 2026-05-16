@@ -660,3 +660,50 @@ class Payment {
     }
   }
 }
+
+// ─── Video Model ──────────────────────────────────────────────────────────────
+class VideoModel {
+  final String id;
+  final String title;
+  final String url;
+  final String? universityId;
+  final String? unit;
+  final bool isPremium;
+  final int viewCount;
+
+  VideoModel({
+    required this.id,
+    required this.title,
+    required this.url,
+    this.universityId,
+    this.unit,
+    this.isPremium = false,
+    this.viewCount = 0,
+  });
+
+  factory VideoModel.fromJson(Map<String, dynamic> json) {
+    return VideoModel(
+      id: json['_id'] ?? json['id'] ?? '',
+      title: json['title'] ?? '',
+      url: json['url'] ?? '',
+      universityId: json['university'] is String 
+          ? json['university'] 
+          : (json['university'] is Map ? json['university']['_id'] : null),
+      unit: json['unit'],
+      isPremium: json['isPremium'] ?? false,
+      viewCount: json['viewCount'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'title': title,
+      'url': url,
+      'university': universityId,
+      'unit': unit,
+      'isPremium': isPremium,
+      'viewCount': viewCount,
+    };
+  }
+}

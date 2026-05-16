@@ -10,7 +10,8 @@
     "lint": "eslint . --ext .ts",
     "create-admin": "ts-node src/scripts/createAdmin.ts",
     "init-contact-info": "ts-node src/scripts/initContactInfo.ts",
-    "init-app-content": "ts-node src/scripts/initAppContent.ts"
+    "init-app-content": "ts-node src/scripts/initAppContent.ts",
+    "init-statistics": "ts-node src/scripts/initStatistics.ts"
   },
   "keywords": [],
   "author": "",

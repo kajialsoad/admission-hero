@@ -18,9 +18,20 @@ import analyticsRoutes from './routes/analytics';
 import settingsRoutes from './routes/settings';
 import appContentRoutes from './routes/appContent';
 import bannerRoutes from './routes/banner';
+import statisticsRoutes from './routes/statistics';
 import errorHandler from './middlewares/errorHandler';
+import path from 'path';
 
 const app = express();
+
+// Serve Admin Dashboard
+const adminBuildPath = path.join(__dirname, '../admin-dashboard-build');
+app.use('/admin', express.static(adminBuildPath));
+
+// Fallback for Admin Dashboard SPA routing
+app.get('/admin/*', (req, res) => {
+  res.sendFile(path.join(adminBuildPath, 'index.html'));
+});
 
 app.use(helmet());
 app.use(cors());
@@ -54,6 +65,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/app-content', appContentRoutes);
 app.use('/api/banners', bannerRoutes);
+app.use('/api/statistics', statisticsRoutes);
 
 app.get('/', (_req, res) => res.send({ok:true, message: 'Admission Hero backend'}));
 

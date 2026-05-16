@@ -18,6 +18,7 @@ import {
   CreditCard,
   FileText,
   Image as ImageIcon,
+  TrendingUp,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
@@ -45,6 +46,7 @@ const navigation = [
   { name: "Packages", href: "/dashboard/packages", icon: Package, badge: null },
   { name: "Promo Codes", href: "/dashboard/promo-codes", icon: Tag, badge: null },
   { name: "Banner Manage", href: "/dashboard/banners", icon: ImageIcon, badge: null },
+  { name: "App Statistics", href: "/dashboard/statistics", icon: TrendingUp, badge: null },
   { name: "Payments", href: "/dashboard/payments", icon: CreditCard, badge: null },
   { name: "App Content", href: "/dashboard/app-content", icon: FileText, badge: null },
   { name: "Settings", href: "/dashboard/settings", icon: Settings, badge: null },

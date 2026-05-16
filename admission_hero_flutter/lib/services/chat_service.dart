@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/constants.dart';
 
 class ChatService {
   static final ChatService _instance = ChatService._internal();
   factory ChatService() => _instance;
   ChatService._internal();
 
-  static const String baseUrl = 'https://munns-production.up.railway.app/api';
+  static const String baseUrl = AppConstants.baseUrl;
 
   // Get auth token
   Future<String?> _getAuthToken() async {

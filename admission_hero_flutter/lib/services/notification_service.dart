@@ -3,13 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/constants.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  static const String baseUrl = 'https://munns-production.up.railway.app/api';
+  static const String baseUrl = AppConstants.baseUrl;
   
   final List<AppNotification> _notifications = [];
   final ValueNotifier<List<AppNotification>> notificationsNotifier = ValueNotifier([]);

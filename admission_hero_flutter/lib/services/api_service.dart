@@ -132,6 +132,15 @@ class ApiService {
   static Future<Map<String, dynamic>?> submitExam(Map<String, dynamic> data) => ApiService().post('/exams/submit', data);
   static Future<Map<String, dynamic>?> getPerformanceStats() => ApiService().get('/exams/performance/stats');
   static Future<Map<String, dynamic>?> getRecentExamResults({int limit = 5}) => ApiService().get('/exams/performance/recent?limit=$limit');
+  static Future<Map<String, dynamic>?> getVideos({String? universityId, String? unit}) {
+    String query = '';
+    if (universityId != null) query += 'universityId=$universityId&';
+    if (unit != null) query += 'unit=$unit&';
+    return ApiService().get('/videos?$query', requiresAuth: false);
+  }
+
+  // --- Statistics Methods ---
+  static Future<Map<String, dynamic>?> getStatistics() => ApiService().get('/statistics', requiresAuth: false);
 
   // --- Upload Methods ---
   static Future<String?> uploadImage(XFile file) async {

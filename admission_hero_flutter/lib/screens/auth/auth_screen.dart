@@ -83,7 +83,9 @@ class _AuthScreenState extends State<AuthScreen>
       await subscriptionProvider.checkSubscriptionStatus();
     }
     
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
 
     if (!mounted) return;
     if (success) {
@@ -125,7 +127,9 @@ class _AuthScreenState extends State<AuthScreen>
       phone: phone,
       password: pass,
     );
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
 
     if (!mounted) return;
     if (result['success'] == true) {

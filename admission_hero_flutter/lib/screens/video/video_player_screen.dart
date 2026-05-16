@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../utils/constants.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:video_player/video_player.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:provider/provider.dart';
+import '../../theme/app_theme.dart';
+import '../../providers/video_provider.dart';
+import '../../models/models.dart';
+
+// Conditional imports for web
+import 'web_video_helper.dart' if (dart.library.io) 'web_video_helper_stub.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoUrl;
@@ -19,395 +28,306 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  bool _isPlaying = false;
-  bool _showControls = true;
-  double _currentPosition = 0.0;
-  double _totalDuration = 100.0; // Mock duration
-  bool _isFullscreen = false;
+  // Mobile controllers
+  VideoPlayerController? _videoController;
+  YoutubePlayerController? _youtubeController;
+  
+  bool _isYoutube = false;
+  bool _isInitialized = false;
+  String? _errorMessage;
+  String? _youtubeId;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Initialize actual video player here
-    // For now, we'll create a mock video player UI
+    _youtubeId = YoutubePlayer.convertUrlToId(widget.videoUrl);
+    _isYoutube = _youtubeId != null;
+
+    if (kIsWeb && _isYoutube) {
+      registerYoutubeWebPlayer(_youtubeId!);
+      setState(() {
+        _isInitialized = true;
+      });
+    } else {
+      _initializeMobilePlayer();
+    }
+  }
+
+  void _initializeMobilePlayer() {
+    final String url = widget.videoUrl;
+
+    if (_isYoutube) {
+      _youtubeController = YoutubePlayerController(
+        initialVideoId: _youtubeId!,
+        flags: const YoutubePlayerFlags(
+          autoPlay: true,
+          mute: false,
+          disableDragSeek: false,
+          loop: false,
+          isLive: false,
+          forceHD: false,
+          enableCaption: true,
+        ),
+      );
+      setState(() {
+        _isInitialized = true;
+      });
+    } else {
+      // Direct video URL (MP4, etc.)
+      _videoController = VideoPlayerController.networkUrl(Uri.parse(url))
+        ..initialize().then((_) {
+          setState(() {
+            _isInitialized = true;
+            _videoController?.play();
+          });
+        }).catchError((error) {
+          setState(() {
+            _errorMessage = 'Error loading video: $error';
+          });
+        });
+    }
   }
 
   @override
   void dispose() {
-    // TODO: Dispose video player
-    super.dispose();
-  }
-
-  void _togglePlayPause() {
-    setState(() {
-      _isPlaying = !_isPlaying;
-    });
-    // TODO: Implement actual play/pause
-  }
-
-  void _toggleFullscreen() {
-    setState(() {
-      _isFullscreen = !_isFullscreen;
-    });
+    _youtubeController?.dispose();
+    _videoController?.dispose();
     
-    if (_isFullscreen) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
-    }
-  }
-
-  void _onSeek(double value) {
-    setState(() {
-      _currentPosition = value;
-    });
-    // TODO: Implement actual seek
-  }
-
-  String _formatDuration(double seconds) {
-    final minutes = (seconds / 60).floor();
-    final remainingSeconds = (seconds % 60).floor();
-    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isFullscreen) {
-      return _buildFullscreenPlayer();
-    }
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        title: Text(widget.title, style: const TextStyle(fontSize: 16)),
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(
-          widget.title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
-      body: Column(
-        children: [
-          // Video Player
-          _buildVideoPlayer(),
-          
-          // Video Info
-          Expanded(
-            child: Container(
-              color: Colors.white,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    
-                    if (widget.description != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        widget.description!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Video Actions
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              // TODO: Add to favorites
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Added to favorites'),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.favorite_border),
-                            label: const Text('Favorite'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              // TODO: Download video
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Download started'),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.download),
-                            label: const Text('Download'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Related Videos Section
-                    const Text(
-                      'Related Videos',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Mock related videos
-                    ...List.generate(3, (index) => _buildRelatedVideoCard(index)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVideoPlayer() {
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Container(
-        color: Colors.black,
-        child: Stack(
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Video placeholder (in real app, this would be the video widget)
-            Center(
-              child: Container(
-                width: double.infinity,
-                height: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.grey[800]!,
-                      Colors.grey[900]!,
-                    ],
-                  ),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.play_circle_outline,
-                    size: 80,
-                    color: Colors.white54,
-                  ),
-                ),
+            // Video Player Section
+            Container(
+              color: Colors.black,
+              width: double.infinity,
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: _buildPlayer(),
               ),
             ),
             
-            // Video Controls Overlay
-            if (_showControls)
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.3),
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    const Spacer(),
-                    
-                    // Play/Pause Button
-                    Center(
-                      child: GestureDetector(
-                        onTap: _togglePlayPause,
-                        child: Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _isPlaying ? Icons.pause : Icons.play_arrow,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        ),
-                      ),
-                    ),
-                    
-                    const Spacer(),
-                    
-                    // Bottom Controls
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          // Progress Bar
-                          Row(
-                            children: [
-                              Text(
-                                _formatDuration(_currentPosition),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Expanded(
-                                child: Slider(
-                                  value: _currentPosition,
-                                  max: _totalDuration,
-                                  onChanged: _onSeek,
-                                  activeColor: Theme.of(context).colorScheme.primary,
-                                  inactiveColor: Colors.white30,
-                                ),
-                              ),
-                              Text(
-                                _formatDuration(_totalDuration),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                          
-                          // Control Buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () {
-                                      // TODO: Rewind 10 seconds
-                                    },
-                                    icon: const Icon(
-                                      Icons.replay_10,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed: _togglePlayPause,
-                                    icon: Icon(
-                                      _isPlaying ? Icons.pause : Icons.play_arrow,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      // TODO: Forward 10 seconds
-                                    },
-                                    icon: const Icon(
-                                      Icons.forward_10,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              
-                              Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () {
-                                      // TODO: Toggle subtitles
-                                    },
-                                    icon: const Icon(
-                                      Icons.subtitles,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      // TODO: Change quality
-                                    },
-                                    icon: const Icon(
-                                      Icons.settings,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed: _toggleFullscreen,
-                                    icon: const Icon(
-                                      Icons.fullscreen,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+            // Native Video Progress Indicator
+            if (!kIsWeb && !_isYoutube && _isInitialized && _videoController != null)
+              VideoProgressIndicator(
+                _videoController!,
+                allowScrubbing: true,
+                colors: const VideoProgressColors(
+                  playedColor: AppColors.primary,
+                  bufferedColor: Colors.white24,
+                  backgroundColor: Colors.white10,
                 ),
               ),
+              
+            _buildInfoSection(),
             
-            // Tap to show/hide controls
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _showControls = !_showControls;
-                });
-              },
-              child: Container(
-                width: double.infinity,
-                height: double.infinity,
-                color: Colors.transparent,
-              ),
-            ),
+            _buildRelatedVideosSection(),
+            
+            // Space at bottom
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFullscreenPlayer() {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
+  Widget _buildPlayer() {
+    if (_errorMessage != null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Center(child: _buildVideoPlayer()),
-          
-          // Exit fullscreen button
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            left: 10,
-            child: IconButton(
-              onPressed: _toggleFullscreen,
-              icon: const Icon(
-                Icons.fullscreen_exit,
-                color: Colors.white,
-                size: 30,
+          const Icon(Icons.error_outline, color: Colors.white, size: 48),
+          const SizedBox(height: 16),
+          Text(_errorMessage!, style: const TextStyle(color: Colors.white70)),
+        ],
+      );
+    }
+
+    if (!_isInitialized) {
+      return const CircularProgressIndicator(color: AppColors.primary);
+    }
+
+    if (kIsWeb && _isYoutube) {
+      return getYoutubeWebPlayer(_youtubeId!);
+    }
+
+    if (_isYoutube && _youtubeController != null) {
+      return YoutubePlayer(
+        controller: _youtubeController!,
+        showVideoProgressIndicator: true,
+        progressIndicatorColor: AppColors.primary,
+      );
+    } else if (_videoController != null) {
+      return AspectRatio(
+        aspectRatio: _videoController!.value.aspectRatio,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            VideoPlayer(_videoController!),
+            _buildVideoControls(),
+          ],
+        ),
+      );
+    }
+
+    return const Text('Player not available', style: TextStyle(color: Colors.white));
+  }
+
+  Widget _buildVideoControls() {
+    if (kIsWeb || _videoController == null) return const SizedBox.shrink();
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _videoController!.value.isPlaying
+              ? _videoController!.pause()
+              : _videoController!.play();
+        });
+      },
+      child: Container(
+        color: Colors.transparent,
+        child: Center(
+          child: AnimatedOpacity(
+            opacity: _videoController!.value.isPlaying ? 0.0 : 1.0,
+            duration: const Duration(milliseconds: 300),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Colors.black45,
+                shape: BoxShape.circle,
               ),
+              child: Icon(
+                _videoController!.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                color: Colors.white,
+                size: 40,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Text(
+            widget.title,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Action Buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildActionButton(Icons.thumb_up_outlined, 'Like'),
+              _buildActionButton(Icons.share_outlined, 'Share'),
+              _buildActionButton(Icons.download_outlined, 'Download'),
+              _buildActionButton(Icons.playlist_add_outlined, 'Save'),
+            ],
+          ),
+          
+          const Divider(height: 32),
+          
+          // Description Header
+          Text(
+            'Description',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+            ),
+          ),
+          
+          const SizedBox(height: 10),
+          
+          // Description Content
+          Text(
+            (widget.description != null && widget.description!.isNotEmpty)
+                ? widget.description!
+                : 'No description available for this video.',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Tip Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.primaryBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.primary.withOpacity(0.1),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline, 
+                  color: isDark ? AppColors.darkPrimary : AppColors.primary, 
+                  size: 24
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pro Tip',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.darkTextPrimary : AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Rotate your phone for a better viewing experience.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -415,64 +335,128 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     );
   }
 
-  Widget _buildRelatedVideoCard(int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          // Thumbnail
-          Container(
-            width: 120,
-            height: 68,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.play_circle_outline,
-              color: Colors.grey,
-              size: 30,
-            ),
-          ),
-          
-          const SizedBox(width: 12),
-          
-          // Video Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Related Video ${index + 1}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Video explanation for question ${index + 1}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${5 + index}:30',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
+  Widget _buildRelatedVideosSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final videos = context.watch<VideoProvider>().videos;
+    
+    // Filter out the current video if possible (using URL as proxy for ID since we might not have ID in widget)
+    final relatedVideos = videos.where((v) => v.url != widget.videoUrl).toList();
+    
+    if (relatedVideos.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Related Videos',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
             ),
           ),
-        ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 160,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: relatedVideos.length,
+            itemBuilder: (context, index) {
+              final video = relatedVideos[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushReplacementNamed(context, '/video-player', arguments: {
+                    'videoUrl': video.url,
+                    'title': video.title,
+                    'description': 'More preparation content for you.',
+                  });
+                },
+                child: Container(
+                  width: 200,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          height: 100,
+                          color: Colors.black,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Image.network(
+                                'https://img.youtube.com/vi/${_extractVideoId(video.url)}/hqdefault.jpg',
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                errorBuilder: (_, __, ___) => const Icon(Icons.play_circle, color: Colors.white, size: 30),
+                              ),
+                              const Icon(Icons.play_arrow, color: Colors.white, size: 20),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        video.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _extractVideoId(String url) {
+    if (url.contains('v=')) return url.split('v=')[1].split('&')[0];
+    if (url.contains('youtu.be/')) return url.split('youtu.be/')[1].split('?')[0];
+    return '';
+  }
+
+  Widget _buildActionButton(IconData icon, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$label feature coming soon!'), duration: const Duration(seconds: 1)),
+        );
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon, 
+              size: 24, 
+              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

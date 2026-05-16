@@ -19,6 +19,8 @@ import 'providers/university_provider.dart';
 import 'providers/firebase_provider.dart';
 import 'providers/subscription_provider.dart';
 import 'providers/banner_provider.dart';
+import 'providers/video_provider.dart';
+import 'providers/statistics_provider.dart';
 
 // Screens
 import 'screens/auth/auth_screen.dart';
@@ -33,7 +35,7 @@ import 'screens/home/unit_selection_screen.dart';
 import 'screens/home/featured_exams_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/profile/edit_profile_screen.dart';
-import 'screens/profile/support_screen.dart';
+import 'screens/support/support_screen.dart';
 import 'screens/profile/performance_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/subscription/new_subscription_screen.dart';
@@ -93,6 +95,8 @@ class AdmissionHeroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeService()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
         ChangeNotifierProvider(create: (_) => BannerProvider()),
+        ChangeNotifierProvider(create: (_) => VideoProvider()),
+        ChangeNotifierProvider(create: (_) => StatisticsProvider()),
 
         // Firebase provider — initialized after Firebase.initializeApp()
         ChangeNotifierProvider(
@@ -427,62 +431,69 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 duration: const Duration(milliseconds: 800),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // "from Exam Hero" at the very bottom center
-                      Column(
+                  child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'from Exam Hero',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.red.shade400,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      // "Next" button at the right side
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Material(
-                          color: AppColors.primary,
-                          elevation: 4,
-                          borderRadius: BorderRadius.circular(30),
-                          child: InkWell(
-                            onTap: _handleTap,
+                          // "Next" button at the center
+                          Material(
+                            color: AppColors.primary,
+                            elevation: 8,
+                            shadowColor: AppColors.primary.withOpacity(0.4),
                             borderRadius: BorderRadius.circular(30),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Text(
-                                    'Next',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                            child: InkWell(
+                              onTap: _handleTap,
+                              borderRadius: BorderRadius.circular(30),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Text(
+                                      'Next',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(width: 6),
-                                  Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
-                                ],
+                                    SizedBox(width: 8),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 32),
+                          
+                          // Professional Branding
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'from ',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textMuted,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                'EXAM HERO',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.primary.withOpacity(0.8),
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
                 ),
               ),
             ),

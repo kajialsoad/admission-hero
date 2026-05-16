@@ -3,13 +3,14 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
+import '../utils/constants.dart';
 
 class AnalyticsService {
   static final AnalyticsService _instance = AnalyticsService._internal();
   factory AnalyticsService() => _instance;
   AnalyticsService._internal();
 
-  static const String baseUrl = 'https://munns-production.up.railway.app/api';
+  static const String baseUrl = AppConstants.baseUrl;
   String? _sessionId;
   Map<String, dynamic>? _deviceInfo;
 
