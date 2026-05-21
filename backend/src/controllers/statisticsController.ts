@@ -1,26 +1,34 @@
 import { Request, Response } from 'express';
 import AppStatistics from '../models/AppStatistics';
+import QuestionSet from '../models/QuestionSet';
+import Question from '../models/Question';
+import Video from '../models/Video';
 
 // Get current statistics (public endpoint)
 export const getStatistics = async (req: Request, res: Response) => {
   try {
     let stats = await AppStatistics.findOne().sort({ updatedAt: -1 });
     
+    // Dynamically query actual collection counts
+    const realExamsCount = await QuestionSet.countDocuments();
+    const realQuestionsCount = await Question.countDocuments();
+    const realVideosCount = await Video.countDocuments();
+
     // If no statistics exist, create default
     if (!stats) {
       stats = await AppStatistics.create({
-        totalExams: 0,
-        totalQuestions: 0,
-        totalVideos: 0,
+        totalExams: realExamsCount,
+        totalQuestions: realQuestionsCount,
+        totalVideos: realVideosCount,
       });
     }
 
     res.status(200).json({
       success: true,
       data: {
-        totalExams: stats.totalExams,
-        totalQuestions: stats.totalQuestions,
-        totalVideos: stats.totalVideos,
+        totalExams: realExamsCount > 0 ? realExamsCount : stats.totalExams,
+        totalQuestions: realQuestionsCount > 0 ? realQuestionsCount : stats.totalQuestions,
+        totalVideos: realVideosCount > 0 ? realVideosCount : stats.totalVideos,
         updatedAt: stats.updatedAt,
       },
     });

@@ -1,7 +1,7 @@
 name: admission_hero_flutter
 description: Admission Hero - Bangladesh University Admission Exam Preparation App
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

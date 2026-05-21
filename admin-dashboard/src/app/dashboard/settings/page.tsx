@@ -63,9 +63,9 @@ export default function SettingsPage() {
 
   // Contact Information State
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
-    email: 'support@admission-hero.com',
-    phone: '+880 1234 567890',
-    workingHours: 'Mon-Sat, 9 AM - 6 PM'
+    email: 'support.admissionhero@gmail.com',
+    phone: '+880 1575804161',
+    workingHours: 'Available from 10:00 AM to 10:00 PM'
   })
   const [savingContact, setSavingContact] = useState(false)
 

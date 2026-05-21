@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/chat_service.dart';
+import '../../services/settings_service.dart';
+import '../../models/contact_info.dart';
 import '../../utils/constants.dart';
 
 class ChatMessage {
@@ -49,6 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isTyping = false;
   bool _isLoading = true;
   String? _conversationId;
+  ContactInfo? _contactInfo;
 
   @override
   void initState() {
@@ -67,6 +70,17 @@ class _ChatScreenState extends State<ChatScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.user;
     
+    try {
+      final contactInfo = await SettingsService.getContactInfo();
+      if (mounted) {
+        setState(() {
+          _contactInfo = contactInfo;
+        });
+      }
+    } catch (e) {
+      print('DEBUG: Error loading contact info in chat: $e');
+    }
+
     if (user != null) {
       _conversationId = _chatService.generateConversationId(user.id);
       await _loadMessages();
@@ -193,9 +207,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String _getAutoResponse(String userMessage) {
     final msg = userMessage.toLowerCase();
+    final supportPhone = _contactInfo?.phone ?? '+880 1575804161';
     
     if (msg.contains('payment') || msg.contains('bkash') || msg.contains('পেমেন্ট')) {
-      return 'পেমেন্ট সংক্রান্ত সমস্যার জন্য আমাদের bKash মার্চেন্ট নম্বর: 01XXXXXXXXX এ যোগাযোগ করুন। অথবা আপনার ট্রানজেকশন ID দিয়ে আমাদের জানান।';
+      return 'পেমেন্ট সংক্রান্ত সমস্যার জন্য আমাদের bKash মার্চেন্ট নম্বর: $supportPhone এ যোগাযোগ করুন। অথবা আপনার ট্রানজেকশন ID দিয়ে আমাদের জানান।';
     } else if (msg.contains('exam') || msg.contains('question') || msg.contains('পরীক্ষা')) {
       return 'পরীক্ষা সংক্রান্ত যেকোনো সমস্যার জন্য আমরা আছি। আপনার নির্দিষ্ট সমস্যাটি বলুন, আমরা সাহায্য করব।';
     } else if (msg.contains('subscription') || msg.contains('সাবস্ক্রিপশন')) {
@@ -203,7 +218,7 @@ class _ChatScreenState extends State<ChatScreen> {
     } else if (msg.contains('login') || msg.contains('লগইন')) {
       return 'লগইন সমস্যার জন্য আপনার ইমেইল/ফোন নম্বর এবং পাসওয়ার্ড চেক করুন। পাসওয়ার্ড ভুলে গেলে "Forgot Password" ব্যবহার করুন।';
     } else {
-      return 'আপনার প্রশ্নের জন্য ধন্যবাদ। আমাদের সাপোর্ট টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে। জরুরি সাহায্যের জন্য কল করুন: +880 1XXXXXXXXX';
+      return 'আপনার সাহায্যের জন্য ধন্যবাদ। আমাদের সাপোর্ট টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে। জরুরী সাহায্যের জন্য কল করুন: $supportPhone';
     }
   }
 
@@ -220,7 +235,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _openWhatsApp() async {
-    const phoneNumber = '8801575804161'; // WhatsApp number without + sign
+    final rawPhone = _contactInfo?.phone ?? '8801575804161';
+    var phoneNumber = rawPhone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (phoneNumber.startsWith('0')) {
+      phoneNumber = '880' + phoneNumber.substring(1);
+    } else if (!phoneNumber.startsWith('880') && phoneNumber.length == 10) {
+      phoneNumber = '880' + phoneNumber;
+    }
+    if (phoneNumber.isEmpty) {
+      phoneNumber = '8801575804161';
+    }
     const message = 'আসসালামু আলাইকুম! আমি Admission Hero থেকে সাহায্য চাই।';
     final url = Uri.parse('https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
     
@@ -278,13 +302,30 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.phone),
-            onPressed: () {
-              // TODO: Implement call functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Call: +880 1XXXXXXXXX'),
-                ),
-              );
+            onPressed: () async {
+              final phone = _contactInfo?.phone ?? '01575804161';
+              final Uri url = Uri.parse('tel:$phone');
+              try {
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url);
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Call: $phone'),
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                    ),
+                  );
+                }
+              }
             },
           ),
         ],

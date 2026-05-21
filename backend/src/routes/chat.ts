@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import ChatMessage from '../models/ChatMessage';
+import Settings from '../models/Settings';
 import { protect, adminOnly } from '../middlewares/auth';
 
 const router = express.Router();
@@ -151,14 +152,26 @@ router.post('/auto-response', [
     let autoResponse = '';
     const lowerMessage = message.toLowerCase();
 
-    if (lowerMessage.includes('payment') || lowerMessage.includes('bkash')) {
-      autoResponse = 'আপনার পেমেন্ট সংক্রান্ত সমস্যার জন্য আমরা দুঃখিত। আমাদের সাপোর্ট টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।';
-    } else if (lowerMessage.includes('exam') || lowerMessage.includes('question')) {
-      autoResponse = 'পরীক্ষা সংক্রান্ত যেকোনো সমস্যার জন্য আমাদের সাথে যোগাযোগ করুন। আমরা আপনাকে সাহায্য করতে প্রস্তুত।';
-    } else if (lowerMessage.includes('login') || lowerMessage.includes('password')) {
-      autoResponse = 'লগইন সমস্যার জন্য আপনার ইমেইল এবং ফোন নম্বর যাচাই করুন। প্রয়োজনে পাসওয়ার্ড রিসেট করুন।';
+    let supportPhone = '+880 1575-804161';
+    try {
+      const contactInfoSetting = await Settings.findOne({ key: 'contact_info', category: 'public' });
+      if (contactInfoSetting && contactInfoSetting.value && contactInfoSetting.value.phone) {
+        supportPhone = contactInfoSetting.value.phone;
+      }
+    } catch (e) {
+      console.error('Error fetching contact info for auto-response:', e);
+    }
+
+    if (lowerMessage.includes('payment') || lowerMessage.includes('bkash') || lowerMessage.includes('পেমেন্ট')) {
+      autoResponse = `পেমেন্ট সংক্রান্ত সমস্যার জন্য আমাদের bKash মার্চেন্ট নম্বর: ${supportPhone} এ যোগাযোগ করুন। অথবা আপনার ট্রানজেকশন ID দিয়ে আমাদের জানান।`;
+    } else if (lowerMessage.includes('exam') || lowerMessage.includes('question') || lowerMessage.includes('পরীক্ষা')) {
+      autoResponse = `পরীক্ষা সংক্রান্ত যেকোনো সমস্যার জন্য আমরা আছি। আপনার নির্দিষ্ট সমস্যাটি বলুন, আমরা সাহায্য করব।`;
+    } else if (lowerMessage.includes('login') || lowerMessage.includes('password') || lowerMessage.includes('লগইন')) {
+      autoResponse = `লগইন সমস্যার জন্য আপনার ইমেইল এবং ফোন নম্বর যাচাই করুন। প্রয়োজনে পাসওয়ার্ড রিসেট করুন।`;
+    } else if (lowerMessage.includes('subscription') || lowerMessage.includes('সাবস্ক্রিপশন')) {
+      autoResponse = `সাবস্ক্রিপশন সংক্রান্ত তথ্যের জন্য Profile > My Subscription এ যান। আরো সাহায্যের জন্য আমাদের জানান।`;
     } else {
-      autoResponse = 'আপনার বার্তার জন্য ধন্যবাদ। আমাদের সাপোর্ট টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।';
+      autoResponse = `আপনার সাহায্যের জন্য ধন্যবাদ। আমাদের সাপোর্ট টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে। জরুরী সাহায্যের জন্য কল করুন: ${supportPhone}`;
     }
 
     // Create auto-response message

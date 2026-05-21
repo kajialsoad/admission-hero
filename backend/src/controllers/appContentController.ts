@@ -172,7 +172,7 @@ export const initializeDefaultContent = async (req: Request, res: Response) => {
       {
         key: 'contact_us',
         title: 'Contact Us',
-        content: '<h2>Contact Us</h2><p>Email: support@admission-hero.com<br>Phone: +880 1234 567890</p>',
+        content: '<h2>Contact Us</h2><p>Email: support.admissionhero@gmail.com<br>Phone: +880 1575804161</p>',
         status: 'published',
       },
       {

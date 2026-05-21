@@ -34,6 +34,15 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Email/Phone and password required" });
     }
 
+    // Security check: explicitly block default insecure admin credentials
+    const cleanEmail = phoneOrEmail.trim().toLowerCase();
+    if (
+      (cleanEmail === 'admin@admissionhero.com' || cleanEmail === 'admin@gmail.com' || cleanEmail === 'admin@hero.test') &&
+      (password === 'admin123456' || password === 'admin123')
+    ) {
+      return res.status(400).json({ error: "Invalid credentials (default insecure credentials blocked)" });
+    }
+
     // Find by email or phone
     const user = await User.findOne({
       $or: [{ email: phoneOrEmail.trim().toLowerCase() }, { phone: phoneOrEmail.trim() }],
