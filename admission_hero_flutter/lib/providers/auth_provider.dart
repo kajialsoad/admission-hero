@@ -223,6 +223,34 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // ── Delete Account ─────────────────────────────────────────────────────────
+  Future<bool> deleteAccount(String password) async {
+    _errorMessage = null;
+    try {
+      await _api.delete(
+        AppConstants.deleteAccountEndpoint,
+        body: {'password': password.trim()},
+      );
+
+      // Clear Firebase & local data
+      await _firebase.clearUserId();
+      _user = null;
+      _token = null;
+      _errorMessage = null;
+      await StorageService.clearAll();
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'অ্যাকাউন্ট ডিলিট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+      notifyListeners();
+      return false;
+    }
+  }
+
   // ── Logout ─────────────────────────────────────────────────────────────────
   Future<void> logout() async {
     // ── Firebase clear on logout ───────────────────────────────────────────

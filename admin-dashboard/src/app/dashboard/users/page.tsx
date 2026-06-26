@@ -1,9 +1,14 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { Search, UserCheck, UserX, Mail, Phone, Edit2, Zap, UserPlus } from "lucide-react"
 import toast from "react-hot-toast"
-import { useGetUsersQuery, useUpdateUserStatusMutation, useUpdateUserSubscriptionMutation, useCreateAdminMutation } from "../../../store/api/usersApi"
+import { 
+  useGetUsersQuery, 
+  useUpdateUserStatusMutation, 
+  useUpdateUserSubscriptionMutation,
+  useCreateUserMutation
+} from "../../../store/api/usersApi"
 
 interface SubscriptionModalData {
   userId: string
@@ -19,12 +24,14 @@ export default function UsersPage() {
   const [subscriptionFilter, setSubscriptionFilter] = useState<"all" | "free" | "Premium">("all")
   const [showSubModal, setShowSubModal] = useState(false)
   const [subModalData, setSubModalData] = useState<SubscriptionModalData | null>(null)
-  const [showCreateAdminModal, setShowCreateAdminModal] = useState(false)
-  const [adminFormData, setAdminFormData] = useState({
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false)
+  const [userFormData, setUserFormData] = useState({
     name: "",
     email: "",
     phone: "",
     password: "",
+    subscriptionStatus: "free" as "free" | "Premium",
+    subscriptionType: undefined as "1-month" | "3-month" | "6-month" | undefined,
   })
 
   const { data, error, isLoading } = useGetUsersQuery({
@@ -33,26 +40,38 @@ export default function UsersPage() {
     search: search || undefined,
     status: statusFilter || undefined,
     subscriptionFilter: subscriptionFilter !== "all" ? subscriptionFilter : undefined,
+    role: "user",
   })
 
   const [updateUserStatus] = useUpdateUserStatusMutation()
   const [updateUserSubscription] = useUpdateUserSubscriptionMutation()
-  const [createAdmin, { isLoading: isCreatingAdmin }] = useCreateAdminMutation()
+  const [createUser, { isLoading: isCreatingUser }] = useCreateUserMutation()
 
-  const handleCreateAdmin = async () => {
-    if (!adminFormData.name || !adminFormData.email || !adminFormData.phone || !adminFormData.password) {
-      toast.error("All fields are required")
+  const handleCreateUser = async () => {
+    if (!userFormData.name || !userFormData.phone || !userFormData.password) {
+      toast.error("Name, phone, and password are required")
+      return
+    }
+
+    if (userFormData.subscriptionStatus === "Premium" && !userFormData.subscriptionType) {
+      toast.error("Please select a plan duration for Premium user")
       return
     }
 
     try {
-      await createAdmin(adminFormData).unwrap()
-      toast.success("Admin created successfully")
-      setShowCreateAdminModal(false)
-      setAdminFormData({ name: "", email: "", phone: "", password: "" })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await createUser(userFormData).unwrap()
+      toast.success("User created successfully")
+      setShowCreateUserModal(false)
+      setUserFormData({
+        name: "",
+        email: "",
+        phone: "",
+        password: "",
+        subscriptionStatus: "free",
+        subscriptionType: undefined,
+      })
     } catch (error: any) {
-      toast.error(error.data?.error || error.data?.message || "Failed to create admin")
+      toast.error(error.data?.error || error.data?.message || "Failed to create user")
     }
   }
 
@@ -171,11 +190,11 @@ export default function UsersPage() {
           <p className="mt-2 text-sm text-gray-700">Manage all registered users and their account status.</p>
         </div>
         <button
-          onClick={() => setShowCreateAdminModal(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          onClick={() => setShowCreateUserModal(true)}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-md"
         >
           <UserPlus className="h-5 w-5 mr-2" />
-          Create Admin
+          Add User
         </button>
       </div>
 
@@ -492,74 +511,116 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Create Admin Modal */}
-      {showCreateAdminModal && (
+      {/* Create User Modal */}
+      {showCreateUserModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="border-b border-gray-200 px-6 py-4">
-              <h3 className="text-lg font-medium text-gray-900">Create New Admin</h3>
+              <h3 className="text-lg font-medium text-gray-900">Create New User (নতুন ইউজার তৈরি করুন)</h3>
             </div>
             <div className="px-6 py-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name (পূর্ণ নাম) *</label>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                   placeholder="Enter full name"
-                  value={adminFormData.name}
-                  onChange={(e) => setAdminFormData({ ...adminFormData, name: e.target.value })}
+                  value={userFormData.name}
+                  onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                  placeholder="admin@example.com"
-                  value={adminFormData.email}
-                  onChange={(e) => setAdminFormData({ ...adminFormData, email: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number (মোবাইল নম্বর) *</label>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                   placeholder="01XXXXXXXXX"
-                  value={adminFormData.phone}
-                  onChange={(e) => setAdminFormData({ ...adminFormData, phone: e.target.value })}
+                  value={userFormData.phone}
+                  onChange={(e) => setUserFormData({ ...userFormData, phone: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email (ইমেইল - ঐচ্ছিক)</label>
+                <input
+                  type="email"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  placeholder="user@example.com"
+                  value={userFormData.email}
+                  onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password (পাসওয়ার্ড) *</label>
                 <input
                   type="password"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                   placeholder="Enter password"
-                  value={adminFormData.password}
-                  onChange={(e) => setAdminFormData({ ...adminFormData, password: e.target.value })}
+                  value={userFormData.password}
+                  onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
                 />
               </div>
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800">
-                <strong>Note:</strong> The new admin will be able to login with the provided email/phone and password.
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Subscription Type (সাবস্ক্রিপশন টাইপ)</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  value={userFormData.subscriptionStatus}
+                  onChange={(e) => {
+                    const status = e.target.value as "free" | "Premium"
+                    setUserFormData({
+                      ...userFormData,
+                      subscriptionStatus: status,
+                      subscriptionType: status === "free" ? undefined : "1-month",
+                    })
+                  }}
+                >
+                  <option value="free">Free User (ফ্রি ইউজার)</option>
+                  <option value="Premium">Premium User (প্রিমিয়াম ইউজার)</option>
+                </select>
               </div>
+
+              {userFormData.subscriptionStatus === "Premium" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Plan Duration (প্যাকেজের মেয়াদ) *</label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    value={userFormData.subscriptionType || ""}
+                    onChange={(e) => {
+                      setUserFormData({
+                        ...userFormData,
+                        subscriptionType: e.target.value as "1-month" | "3-month" | "6-month",
+                      })
+                    }}
+                  >
+                    <option value="1-month">1 Month (১ মাস)</option>
+                    <option value="3-month">3 Months (৩ মাস)</option>
+                    <option value="6-month">6 Months (৬ মাস)</option>
+                  </select>
+                </div>
+              )}
             </div>
             <div className="border-t border-gray-200 px-6 py-4 flex gap-3">
               <button
                 onClick={() => {
-                  setShowCreateAdminModal(false)
-                  setAdminFormData({ name: "", email: "", phone: "", password: "" })
+                  setShowCreateUserModal(false)
+                  setUserFormData({
+                    name: "",
+                    email: "",
+                    phone: "",
+                    password: "",
+                    subscriptionStatus: "free",
+                    subscriptionType: undefined,
+                  })
                 }}
                 className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
               >
-                Cancel
+                Cancel (বাতিল)
               </button>
               <button
-                onClick={handleCreateAdmin}
-                disabled={isCreatingAdmin}
+                onClick={handleCreateUser}
+                disabled={isCreatingUser}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isCreatingAdmin ? "Creating..." : "Create Admin"}
+                {isCreatingUser ? "Creating..." : "Create User (ইউজার তৈরি করুন)"}
               </button>
             </div>
           </div>

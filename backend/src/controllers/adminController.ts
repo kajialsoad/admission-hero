@@ -1,4 +1,4 @@
-﻿import { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import User from '../models/User';
 import Exam from '../models/Exam';
 import Question from '../models/Question';
@@ -70,7 +70,7 @@ export const dashboard = async (req: Request, res: Response) => {
 
 export const createAdmin = async (req: Request, res: Response) => {
   try {
-    const { name, email, phone, password } = req.body;
+    const { name, email, phone, password, allowedPages } = req.body;
 
     if (!name || !email || !phone || !password) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -91,7 +91,8 @@ export const createAdmin = async (req: Request, res: Response) => {
       role: 'admin',
       isVerified: true,
       isActive: true,
-      subscriptionStatus: 'Premium'
+      subscriptionStatus: 'Premium',
+      allowedPages: allowedPages || []
     });
 
     const adminData = admin.toObject();
@@ -544,6 +545,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const search = req.query.search as string;
     const subscriptionStatus = req.query.subscriptionStatus as string;
+    const role = req.query.role as string;
     
     const query: any = {};
     
@@ -557,6 +559,10 @@ export const getAllUsers = async (req: Request, res: Response) => {
     
     if (subscriptionStatus && subscriptionStatus !== 'all') {
       query.subscriptionStatus = subscriptionStatus;
+    }
+
+    if (role && role !== 'all') {
+      query.role = role;
     }
     
     const total = await User.countDocuments(query);
@@ -699,5 +705,131 @@ export const getEnabledPaymentMethods = async (req: Request, res: Response) => {
       success: false,
       message: error.message || 'Failed to retrieve enabled payment methods'
     });
+  }
+};
+
+export const updateUserPermissions = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { allowedPages } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required'
+      });
+    }
+
+    if (!Array.isArray(allowedPages)) {
+      return res.status(400).json({
+        success: false,
+        message: 'allowedPages must be an array of strings'
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (user.role !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Permissions can only be updated for admin users'
+      });
+    }
+
+    user.allowedPages = allowedPages;
+    // @ts-ignore
+    await user.save();
+
+    res.json({
+      success: true,
+      data: user,
+      message: 'Admin permissions updated successfully'
+    });
+  } catch (error: any) {
+    console.error('Update user permissions error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to update user permissions'
+    });
+  }
+};
+
+export const createUser = async (req: Request, res: Response) => {
+  try {
+    const { name, email, phone, password, subscriptionStatus, subscriptionType } = req.body;
+
+    if (!name || !phone || !password) {
+      return res.status(400).json({ error: 'Name, Phone, and Password are required' });
+    }
+
+    // Check if user already exists
+    const existing = await User.findOne({ $or: [{ email: email ? email.trim().toLowerCase() : undefined }, { phone: phone.trim() }].filter(Boolean) });
+    if (existing) {
+      return res.status(400).json({ error: 'User with this email or phone already exists' });
+    }
+
+    let expireAt = undefined;
+    if (subscriptionStatus === 'Premium' && subscriptionType) {
+      let durationDays = 0;
+      if (subscriptionType === '1-month') durationDays = 30;
+      else if (subscriptionType === '3-month') durationDays = 90;
+      else if (subscriptionType === '6-month') durationDays = 180;
+      else if (subscriptionType === '12-month') durationDays = 365;
+
+      if (durationDays > 0) {
+        expireAt = new Date();
+        expireAt.setDate(expireAt.getDate() + durationDays);
+      }
+    }
+
+    // Create user
+    const user = await User.create({
+      name,
+      email: email ? email.trim().toLowerCase() : undefined,
+      phone,
+      password,
+      role: 'user',
+      isVerified: true,
+      isActive: true,
+      subscriptionStatus: subscriptionStatus || 'free',
+      subscriptionType: subscriptionStatus === 'Premium' ? subscriptionType : undefined,
+      subscriptionExpireAt: expireAt
+    });
+
+    // Create Subscription record if Premium
+    if (subscriptionStatus === 'Premium' && expireAt) {
+      let durationDays = 0;
+      if (subscriptionType === '1-month') durationDays = 30;
+      else if (subscriptionType === '3-month') durationDays = 90;
+      else if (subscriptionType === '6-month') durationDays = 180;
+      else if (subscriptionType === '12-month') durationDays = 365;
+
+      const subscription = new Subscription({
+        user: user._id,
+        packageName: `${subscriptionType.replace('-', ' ')} (Admin Granted)`,
+        planId: subscriptionType,
+        startAt: new Date(),
+        expireAt: expireAt,
+        active: true,
+        paymentMethod: 'admin',
+        amount: 0,
+        duration: durationDays,
+      });
+      await subscription.save();
+    }
+
+    const userData = user.toObject();
+    delete userData.password;
+
+    return res.json({ success: true, data: userData, message: 'User created successfully' });
+  } catch (error: any) {
+    console.error('Create user error:', error);
+    return res.status(500).json({ error: error.message || 'Failed to create user' });
   }
 };

@@ -392,47 +392,127 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void _showDeleteAccountDialog() {
+    final passwordController = TextEditingController();
+    bool isDeleting = false;
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'অ্যাকাউন্ট ডিলিট করুন',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.red,
-            ),
-          ),
-          content: const Text(
-            'আপনি কি নিশ্চিত যে আপনি আপনার অ্যাকাউন্ট ডিলিট করতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('বাতিল'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // TODO: Implement delete account
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('অ্যাকাউন্ট ডিলিট ফিচার শীঘ্রই আসছে'),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text('ডিলিট করুন'),
-            ),
-          ],
+              title: const Text(
+                'অ্যাকাউন্ট ডিলিট করুন',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'আপনি কি নিশ্চিত যে আপনি আপনার অ্যাকাউন্ট ডিলিট করতে চান? ডিলিট করলে আপনার সকল ডাটা মুছে যাবে এবং একই তথ্য দিয়ে আর লগইন করতে পারবেন না।',
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    enabled: !isDeleting,
+                    decoration: InputDecoration(
+                      labelText: 'পাসওয়ার্ড দিন',
+                      hintText: 'আপনার পাসওয়ার্ড দিন',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.red),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isDeleting ? null : () {
+                    passwordController.dispose();
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('বাতিল'),
+                ),
+                ElevatedButton(
+                  onPressed: isDeleting ? null : () async {
+                    final password = passwordController.text.trim();
+                    if (password.isEmpty) {
+                      ScaffoldMessenger.of(this.context).showSnackBar(
+                        const SnackBar(
+                          content: Text('পাসওয়ার্ড দিন'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    setDialogState(() => isDeleting = true);
+
+                    final authProvider = this.context.read<AuthProvider>();
+                    final success = await authProvider.deleteAccount(password);
+
+                    if (success) {
+                      passwordController.dispose();
+                      if (mounted) {
+                        Navigator.of(dialogContext).pop();
+                        // Navigate to login and remove all previous routes
+                        Navigator.of(this.context).pushNamedAndRemoveUntil(
+                          '/',
+                          (route) => false,
+                        );
+                        ScaffoldMessenger.of(this.context).showSnackBar(
+                          const SnackBar(
+                            content: Text('আপনার অ্যাকাউন্ট সফলভাবে ডিলিট হয়েছে'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } else {
+                      setDialogState(() => isDeleting = false);
+                      if (mounted) {
+                        ScaffoldMessenger.of(this.context).showSnackBar(
+                          SnackBar(
+                            content: Text(authProvider.errorMessage ?? 'অ্যাকাউন্ট ডিলিট করতে সমস্যা হয়েছে'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: isDeleting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text('ডিলিট করুন'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
-}
+}

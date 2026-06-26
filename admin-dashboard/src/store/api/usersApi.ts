@@ -1,4 +1,4 @@
-﻿import { adminApiSlice } from "./adminApiSlice"
+import { adminApiSlice } from "./adminApiSlice"
 
 export interface AdminUser {
   _id: string
@@ -10,6 +10,7 @@ export interface AdminUser {
   subscriptionStatus: "free" | "Premium"
   subscriptionType?: "1-month" | "3-month" | "6-month"
   subscriptionExpireAt?: string
+  allowedPages?: string[]
   createdAt: string
   updatedAt: string
 }
@@ -21,6 +22,7 @@ export interface AdminUsersQuery {
   status?: string
   subscriptionFilter?: "all" | "free" | "Premium"
   sortBy?: "newest" | "expiring"
+  role?: string
 }
 
 export interface AdminUsersResponse {
@@ -52,6 +54,16 @@ export interface CreateAdminRequest {
   email: string
   phone: string
   password: string
+  allowedPages?: string[]
+}
+
+export interface CreateUserRequest {
+  name: string
+  email?: string
+  phone: string
+  password: string
+  subscriptionStatus: "free" | "Premium"
+  subscriptionType?: "1-month" | "3-month" | "6-month"
 }
 
 export const adminUsersApi = adminApiSlice.injectEndpoints({
@@ -101,6 +113,25 @@ export const adminUsersApi = adminApiSlice.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+    updateUserPermissions: builder.mutation<
+      { success: boolean; data: AdminUser; message: string },
+      { id: string; allowedPages: string[] }
+    >({
+      query: ({ id, allowedPages }) => ({
+        url: `/admin/users/${id}/permissions`,
+        method: "PUT",
+        body: { allowedPages },
+      }),
+      invalidatesTags: ["User"],
+    }),
+    createUser: builder.mutation<{ success: boolean; data: AdminUser; message: string }, CreateUserRequest>({
+      query: (body) => ({
+        url: `/admin/users`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["User", "Dashboard"],
+    }),
   }),
 })
 
@@ -110,4 +141,6 @@ export const {
   useUpdateUserStatusMutation,
   useUpdateUserSubscriptionMutation,
   useCreateAdminMutation,
+  useUpdateUserPermissionsMutation,
+  useCreateUserMutation,
 } = adminUsersApi

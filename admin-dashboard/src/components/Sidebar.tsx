@@ -19,10 +19,12 @@ import {
   FileText,
   Image as ImageIcon,
   TrendingUp,
+  Shield,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 import { useAppDispatch } from "../hooks/useAppDispatch"
+import { useAppSelector } from "../hooks/useAppSelector"
 import { logout } from "../store/slices/authSlice"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -39,17 +41,18 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: "Dashboard Home", href: "/dashboard", icon: LayoutDashboard, badge: null },
-  { name: "University Manage", href: "/dashboard/universities", icon: GraduationCap, badge: null },
-  { name: "Question Manage", href: "/dashboard/questions", icon: LucideFileQuestion, badge: null },
-  { name: "User Manage", href: "/dashboard/users", icon: Users, badge: null },
-  { name: "Packages", href: "/dashboard/packages", icon: Package, badge: null },
-  { name: "Promo Codes", href: "/dashboard/promo-codes", icon: Tag, badge: null },
-  { name: "Banner Manage", href: "/dashboard/banners", icon: ImageIcon, badge: null },
-  { name: "App Statistics", href: "/dashboard/statistics", icon: TrendingUp, badge: null },
-  { name: "Payments", href: "/dashboard/payments", icon: CreditCard, badge: null },
-  { name: "App Content", href: "/dashboard/app-content", icon: FileText, badge: null },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings, badge: null },
+  { id: "dashboard", name: "Dashboard Home", href: "/dashboard", icon: LayoutDashboard, badge: null },
+  { id: "universities", name: "University Manage", href: "/dashboard/universities", icon: GraduationCap, badge: null },
+  { id: "questions", name: "Question Manage", href: "/dashboard/questions", icon: LucideFileQuestion, badge: null },
+  { id: "users", name: "User Manage", href: "/dashboard/users", icon: Users, badge: null },
+  { id: "admins", name: "Admin Manage", href: "/dashboard/admins", icon: Shield, badge: null },
+  { id: "packages", name: "Packages", href: "/dashboard/packages", icon: Package, badge: null },
+  { id: "promo-codes", name: "Promo Codes", href: "/dashboard/promo-codes", icon: Tag, badge: null },
+  { id: "banners", name: "Banner Manage", href: "/dashboard/banners", icon: ImageIcon, badge: null },
+  { id: "statistics", name: "App Statistics", href: "/dashboard/statistics", icon: TrendingUp, badge: null },
+  { id: "payments", name: "Payments", href: "/dashboard/payments", icon: CreditCard, badge: null },
+  { id: "app-content", name: "App Content", href: "/dashboard/app-content", icon: FileText, badge: null },
+  { id: "settings", name: "Settings", href: "/dashboard/settings", icon: Settings, badge: null },
 ]
 
 export default function Sidebar() {
@@ -123,6 +126,14 @@ function SidebarContent({
   collapsed?: boolean
   isMobile?: boolean
 }) {
+  const { user } = useAppSelector((state) => state.auth)
+
+  const isSuperAdmin = user?.email === "admin@admissionhero.com" || user?.phone === "01700000000"
+  const allowedNavigation = navigation.filter((item) => {
+    if (isSuperAdmin) return true
+    return user?.allowedPages?.includes(item.id)
+  })
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
@@ -142,7 +153,7 @@ function SidebarContent({
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {navigation.map((item) => {
+        {allowedNavigation.map((item) => {
           const isActive = pathname === item.href
           return (
             <Link
@@ -204,8 +215,8 @@ function SidebarContent({
                   <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-semibold">AD</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-gray-900">Admin User</p>
-                  <p className="text-xs text-gray-500">admin@gmail.com</p>
+                  <p className="text-sm font-medium text-gray-900">{user?.name || "Admin User"}</p>
+                  <p className="text-xs text-gray-500">{user?.email || user?.phone || "admin@gmail.com"}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>

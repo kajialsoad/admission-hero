@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
+import ExamResult from '../models/ExamResult';
+import Subscription from '../models/Subscription';
+import Payment from '../models/Payment';
+import ChatMessage from '../models/ChatMessage';
+import Notification from '../models/Notification';
+import Bookmark from '../models/Bookmark';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendOtpEmail } from '../services/emailService';
@@ -272,5 +278,54 @@ export const updateFcmToken = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("UPDATE FCM TOKEN ERROR:", error);
     return res.status(500).json({ error: "Failed to update FCM token" });
+  }
+};
+
+// ── Delete Account ──────────────────────────────────────────────────────────
+export const deleteAccount = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore - user is added by auth middleware
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required to delete account' });
+    }
+
+    // Verify password before deleting
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Incorrect password' });
+    }
+
+    // Delete all user-related data
+    const userIdStr = userId.toString();
+    await Promise.all([
+      ExamResult.deleteMany({ userId }),
+      Subscription.deleteMany({ user: userId }),
+      Payment.deleteMany({ user: userId }),
+      ChatMessage.deleteMany({ senderId: userIdStr }),
+      Notification.deleteMany({ userId: userIdStr }),
+      Bookmark.deleteMany({ user: userId }),
+    ]);
+
+    // Delete the user itself
+    await User.findByIdAndDelete(userId);
+
+    console.log(`Account deleted for user: ${userId}`);
+    return res.json({ success: true, message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error("DELETE ACCOUNT ERROR:", error);
+    return res.status(500).json({ error: "Failed to delete account" });
   }
 };

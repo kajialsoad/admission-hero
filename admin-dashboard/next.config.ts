@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // basePath: '/admin',
-  // output: 'export',
+  output: process.env.RAILWAY_ENVIRONMENT ? 'export' : undefined,
   eslint: {
     ignoreDuringBuilds: true,
   },

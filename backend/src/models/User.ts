@@ -19,6 +19,7 @@ export interface IUser extends Document {
   resetOtpExpiry?: Date;
   resetToken?: string;
   resetTokenExpiry?: Date;
+  allowedPages?: string[];
   comparePassword(candidate: string): Promise<boolean>;
 }
 
@@ -44,6 +45,7 @@ const UserSchema: Schema = new Schema({
   resetToken: { type: String, default: null, select: false },
   resetTokenExpiry: { type: Date, default: null, select: false },
   avatar: { type: String, default: null },
+  allowedPages: { type: [String], default: [] },
 }, { timestamps: true });
 
 UserSchema.pre<IUser>('save', async function (next) {

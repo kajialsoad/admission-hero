@@ -7,6 +7,7 @@ interface AdminUser {
   phone: string
   email?: string
   role: string
+  allowedPages?: string[]
 }
 
 interface AdminAuthState {

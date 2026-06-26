@@ -7,6 +7,7 @@ class AppConstants {
   static const String loginEndpoint = '/auth/login';
   static const String registerEndpoint = '/auth/register';
   static const String profileEndpoint = '/auth/profile';
+  static const String deleteAccountEndpoint = '/auth/delete-account';
 
   // University endpoints
   static const String universitiesEndpoint = '/universities';

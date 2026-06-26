@@ -63,7 +63,7 @@ class ApiService {
           break;
         case 'DELETE':
           response = await http
-              .delete(uri, headers: headers)
+              .delete(uri, headers: headers, body: body != null ? jsonEncode(body) : null)
               .timeout(const Duration(seconds: 60));
           break;
         default: // GET
@@ -116,8 +116,8 @@ class ApiService {
   Future<Map<String, dynamic>> put(String endpoint, Map<String, dynamic> body, {bool requiresAuth = true}) =>
       _request('PUT', endpoint, body: body, requiresAuth: requiresAuth);
 
-  Future<Map<String, dynamic>> delete(String endpoint) =>
-      _request('DELETE', endpoint);
+  Future<Map<String, dynamic>> delete(String endpoint, {Map<String, dynamic>? body}) =>
+      _request('DELETE', endpoint, body: body);
 
   // --- Static Helper Methods ---
   static Future<Map<String, dynamic>?> checkSubscription() => ApiService().get('/subscription/status');

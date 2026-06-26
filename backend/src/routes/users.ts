@@ -1,4 +1,4 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
 import { protect, adminOnly } from '../middlewares/auth';
 import User from '../models/User';
 const router = Router();
@@ -15,6 +15,7 @@ router.get('/', protect, adminOnly, async (req: any, res) => {
     const search = req.query.search || '';
     const status = req.query.status || '';
     const subscriptionFilter = req.query.subscriptionFilter || '';
+    const role = req.query.role || '';
 
     const skip = (page - 1) * limit;
     let query: any = {};
@@ -40,6 +41,11 @@ router.get('/', protect, adminOnly, async (req: any, res) => {
       query.subscriptionStatus = 'free';
     } else if (subscriptionFilter === 'Premium') {
       query.subscriptionStatus = 'Premium';
+    }
+
+    // Role filter
+    if (role && role !== 'all') {
+      query.role = role;
     }
 
     const total = await User.countDocuments(query);

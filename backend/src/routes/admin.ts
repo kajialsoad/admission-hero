@@ -16,7 +16,9 @@ import {
   getAllUsers,
   getPaymentSettings,
   updatePaymentSettings,
-  getEnabledPaymentMethods
+  getEnabledPaymentMethods,
+  updateUserPermissions,
+  createUser
 } from '../controllers/adminController';
 import { protect, adminOnly } from '../middlewares/auth';
 
@@ -28,7 +30,9 @@ router.post('/create-admin', protect, adminOnly, createAdmin);
 
 // User Management
 router.get('/users', protect, adminOnly, getAllUsers);
+router.post('/users', protect, adminOnly, createUser);
 router.put('/users/:userId/subscription', protect, adminOnly, updateUserSubscription);
+router.put('/users/:userId/permissions', protect, adminOnly, updateUserPermissions);
 
 // Package Management
 router.get('/packages', protect, adminOnly, getAllPackages);
