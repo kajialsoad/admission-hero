@@ -1,7 +1,8 @@
 "use client"
 
 import { useAppSelector } from "../hooks/useAppSelector"
-import { Search, Settings } from "lucide-react"
+import { useAppDispatch } from "../hooks/useAppDispatch"
+import { Search, Settings, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -15,9 +16,20 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { logout } from "../store/slices/authSlice"
+import toast from "react-hot-toast"
 
 export default function Header() {
   const { user } = useAppSelector((state) => state.auth)
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+
+  const handleLogout = () => {
+    dispatch(logout())
+    toast.success("Logged out successfully")
+    router.push("/")
+  }
 
   return (
     <header className="sticky top-0 z-30 bg-white/95 border-b border-gray-200 backdrop-blur-sm">
@@ -163,6 +175,11 @@ export default function Header() {
                 <DropdownMenuItem className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer text-gray-500">
